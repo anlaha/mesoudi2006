@@ -1,0 +1,122 @@
+You are scoring one participant's written recall for a memory study.
+
+The participant read a short text and then wrote down as much of it as they could remember. The text they read was either four original paragraphs or another participant's recall of them, so their recall may be partial, reordered, blended across paragraphs, or wrong in places. Your job is to decide, for each of 56 propositions from the four original paragraphs, whether this recall contains it.
+
+HOW PROPOSITIONS ARE WRITTEN
+
+Each proposition is given two ways:
+- the notation, in the form PREDICATE, ARGUMENT, ARGUMENT (Kintsch, 1974). This says what the recall has to contain.
+- plain words, which say which part of the story the proposition is about. Two propositions can share the same notation: FOR, DIRECTIONS appears twice, once for Nancy asking the man and once for the man asking the driver, and the plain words tell them apart. Beyond picking out the part of the story, go by the notation. If the plain words mention a person or detail the notation leaves out, the recall does not need it.
+
+Some arguments refer to another proposition by its id, written in brackets. For example, PROMISE, PROFESSOR, NANCY, [gossip_7] means "the professor promised Nancy [gossip_7]", where gossip_7 is "LEAVE, PROFESSOR, WIFE".
+
+RULES
+
+1. Paraphrase counts. Accept any plausible synonym or paraphrase that generally means the same thing, judged by what the words mean in the recall's own context.
+2. Credit only what the recall states, in any wording. Do not credit what a reader would have to work out from the rest of the recall, even when it seems obvious, and never fill anything in from the original paragraphs.
+3. Score each proposition only on what it says itself. Other propositions carry the rest. A proposition about the affair and the professor does not also need Nancy, because Nancy has her own proposition. But when the notation names a character, the recall has to refer to that character. "Someone" is not Nancy.
+4. A proposition stated wrongly is absent: the wrong person, the wrong thing, or the opposite of what the original says.
+5. Look through the whole recall for every proposition. Content can appear anywhere, in any order, and mixed in with other paragraphs.
+6. Ignore tense, spelling and grammar, as long as the meaning is understandable.
+7. Some propositions add a detail to another one, such as FOR, DIRECTIONS; ABOUT, AFFAIR; TO, DIRECTIONS, SWIMMING-POOL; and FREQUENT, FOREST-FIRES. These count only if the event they describe is in the recall. The plain words say which event that is. The same detail attached to a different event does not count.
+
+EXAMPLES
+
+These are decisions from human coding of this study, some on real recalls and some on made-up ones.
+
+Recall: "Colorado has hot temperature."
+physical_1 (HOT, WEATHER): present. "Hot temperature" means the weather is hot here.
+
+Recall: "Nancy overslept through her alarm and was late to class."
+individual_6 (LATE, NANCY, LECTURE): present. "Class" means the lecture here.
+
+Recall: "Nancy wanted to go to the swimming pool but didn't know where it was."
+social_3 (LOST, NANCY): absent. Not knowing where the pool was is not the same as saying she got lost.
+
+Recall: "The professor's wife found out and left the professor."
+gossip_3 (IS, PROFESSOR, MARRIED): absent. The recall mentions his wife but never says he is married.
+
+Recall: "A professor got Nancy pregnant. Later she went to see his wife."
+gossip_5 (PREGNANT-BY, NANCY, PROFESSOR): present.
+gossip_2 (WITH, AFFAIR, COLLEGE-PROFESSOR): absent. There is no affair in this recall, and the notation needs one.
+
+Recall: "Nancy was seeing her professor and ended up expecting. She went and told him, and he wanted nothing to do with it. Soon after he walked out on her."
+gossip_9 (TELL, NANCY, PROFESSOR, [gossip_4]): absent. The recall says she told him, but not what she told him.
+gossip_10 (SINCE, [gossip_9], [gossip_8]): absent. It is built on gossip_9.
+gossip_8 (SEE, PROFESSOR, NANCY, REFUSE): absent. Wanting nothing to do with it, walking out on her or breaking up with her is not refusing to see her. "Refused any contact with her" would count.
+
+Recall: "From the bus driver, Nancy found out how to get to the pool."
+social_12 (GIVE, DRIVER, NANCY, DIRECTIONS): present. Finding out the way from the driver is being given directions by him.
+social_13 (TO, DIRECTIONS, SWIMMING-POOL): present. The directions were to the pool.
+
+Recall: "Nancy also slept with the professor and got pregnant with his child. The professor said he would leave his wife. He did not. She told the wife."
+gossip_11 (TELL, NANCY, WIFE): present. She told the wife.
+gossip_12 (ABOUT, AFFAIR): absent. The recall doesn't say what she told her.
+gossip_1 (HAVE, NANCY, AFFAIR) and gossip_2 (WITH, AFFAIR, COLLEGE-PROFESSOR): absent. The recall says she slept with him, not that she had an affair.
+gossip_5 (PREGNANT-BY, NANCY, PROFESSOR): present. "His child" says who the father is.
+gossip_6 (PROMISE, PROFESSOR, NANCY, [gossip_7]): present. Saying he would leave his wife is promising it.
+
+Recall: "Nancy and her college professor had an affair, and then she was expecting a baby. He had planned to leave his wife."
+gossip_5 (PREGNANT-BY, NANCY, PROFESSOR): absent. The recall doesn't say who the father is.
+gossip_6 (PROMISE, PROFESSOR, NANCY, [gossip_7]): absent. Saying what he planned to do is not saying he promised it.
+gossip_7 (LEAVE, PROFESSOR, WIFE): present.
+
+Recall: "Their professor is having an affair???"
+gossip_2 (WITH, AFFAIR, COLLEGE-PROFESSOR): present. The affair involves the professor.
+gossip_1 (HAVE, NANCY, AFFAIR): absent. The recall never says Nancy is the one having it.
+
+Recall: "Nancy's wife had an affair!"
+gossip_1 (HAVE, NANCY, AFFAIR): absent. The affair is given to the wrong person.
+
+Recall: "The weather was hot and dry, Nancy took the bus on the way to have an affair with her professor, and his wife left him because she found out."
+gossip_12 (ABOUT, AFFAIR, what Nancy told the wife): absent. The wife finding out about the affair is a different event from Nancy telling her about it, and nobody tells the wife anything here.
+
+Recall: "Nancy wanted to go to the swimming pool but didn't know where it was. She asked a bus driver and he told her."
+social_12 (GIVE, DRIVER, NANCY, DIRECTIONS): present. The driver told her the way.
+social_4 (ASK, NANCY, MAN) and social_5 (FOR, DIRECTIONS, Nancy asking the man): absent. She asked the driver, not the man.
+social_10 (ASK, MAN, DRIVER) and social_11 (FOR, DIRECTIONS, the man asking the driver): absent. Nancy did the asking, not the man.
+
+Recall: "She asked the bus driver and he told her to go to Colorado."
+social_12 (GIVE, DRIVER, NANCY, DIRECTIONS): present. He gave her directions, even though they were wrong.
+social_13 (TO, DIRECTIONS, SWIMMING-POOL): absent. The directions were to Colorado, not the pool.
+
+Recall: "Nancy wanted to go to the pool but she couldn't find it."
+social_2 (GO, NANCY, SWIMMING-POOL): present. Wanting to go to the pool is the same as going there in this story.
+social_3 (LOST, NANCY): absent. Not finding the pool is not the same as saying she got lost.
+social_13 (TO, DIRECTIONS, SWIMMING-POOL): absent. Nobody gives directions here, and this detail belongs to the directions.
+
+Recall: "Nancy hopes to swim today but has no idea which way to go. A bus driver is asked, and it turns out he knows, so off she goes swimming."
+social_2 (GO, NANCY, SWIMMING-POOL): present. Hoping to swim is going to the pool in this story.
+social_1 (ENJOY, NANCY, SWIMMING): absent. Hoping to swim is not the same as enjoying it.
+social_3 (LOST, NANCY): absent. Having no idea which way to go is not the same as saying she got lost.
+social_12 (GIVE, DRIVER, NANCY, DIRECTIONS): absent. Knowing the way is not telling her.
+social_14 (GO, NANCY, SWIMMING): present.
+
+Recall: "Someone wanted to go to the pool but couldn't."
+social_2 (GO, NANCY, SWIMMING-POOL) and social_3 (LOST, NANCY): absent. "Someone" is not Nancy.
+
+Recall: "The weather in Colorado is hot and dry. There are many fires."
+physical_9 (FREQUENT, FOREST-FIRES): present. Many fires means the fires are frequent.
+physical_8 (CAUSE, FOREST-FIRES): absent. The recall puts the dry weather and the fires side by side but doesn't say one leads to the other.
+
+Recall: "When coal is burned it releases particles that contribute to global warming."
+physical_10 (RELEASE, SMOKE): absent. Coal and particles are different things from forest fires and smoke.
+
+THE PROPOSITIONS
+
+$propositions
+
+THE RECALL
+
+$recall
+
+YOUR ANSWER
+
+Answer with one entry for every proposition above, in the same order, like this:
+
+{"answers": [
+  {"id": "gossip_1", "present": true, "quote": "the exact words from the recall"},
+  {"id": "gossip_2", "present": false, "quote": ""}
+]}
+
+For a present proposition, "quote" is the shortest exact span of the recall that shows it, copied character for character. For an absent one, "quote" is "".
