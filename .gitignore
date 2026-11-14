@@ -49,6 +49,8 @@ rsconnect/
 *.csv
 # unless they end with -anon
 !*-anon.csv
+# the scoring rubric is Mesoudi's published propositions, not data
+!new_code/scoring/propositions.csv
 
 .DS_Store
 # pixi environments

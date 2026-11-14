@@ -1,0 +1,57 @@
+material,number,proposition,point
+gossip,1,"HAVE, NANCY, AFFAIR",Nancy is having an affair
+gossip,2,"WITH, AFFAIR, COLLEGE-PROFESSOR",The affair is with her college professor
+gossip,3,"IS, PROFESSOR, MARRIED",The professor is married
+gossip,4,"IS, NANCY, PREGNANT",Nancy is pregnant
+gossip,5,"PREGNANT-BY, NANCY, PROFESSOR",Nancy is pregnant by the professor
+gossip,6,"PROMISE, PROFESSOR, NANCY, 7",The professor promised Nancy something
+gossip,7,"LEAVE, PROFESSOR, WIFE",The professor would leave his wife
+gossip,8,"SEE, PROFESSOR, NANCY, REFUSE",The professor refused to see Nancy
+gossip,9,"TELL, NANCY, PROFESSOR, 4",Nancy told the professor she was pregnant
+gossip,10,"SINCE, 9, 8",He refused to see her because she told him she was pregnant
+gossip,11,"TELL, NANCY, WIFE",Nancy told the professor's wife
+gossip,12,"ABOUT, AFFAIR",What she told the wife was about the affair
+gossip,13,"UPSET, WIFE",The wife was upset
+gossip,14,"LEAVE, WIFE, PROFESSOR",The wife left the professor
+social,1,"ENJOY, NANCY, SWIMMING",Nancy enjoys swimming
+social,2,"GO, NANCY, SWIMMING-POOL",Nancy was going to the swimming pool
+social,3,"LOST, NANCY",Nancy got lost
+social,4,"ASK, NANCY, MAN",Nancy asked a man
+social,5,"FOR, DIRECTIONS",Nancy asked the man for directions
+social,6,"IS, MAN, OLD",The man was old
+social,7,"WAIT, MAN, BUS-STOP",The man was waiting at a bus stop
+social,8,"GIVE, MAN, DIRECTIONS, CANNOT",The man couldn't give her directions
+social,9,"ARRIVE, BUS, BUS-STOP",A bus arrived at the bus stop
+social,10,"ASK, MAN, DRIVER",The man asked the driver
+social,11,"FOR, DIRECTIONS",The man asked the driver for directions
+social,12,"GIVE, DRIVER, NANCY, DIRECTIONS",The driver gave Nancy directions
+social,13,"TO, DIRECTIONS, SWIMMING-POOL",The directions were to the swimming pool
+social,14,"GO, NANCY, SWIMMING",Nancy went swimming
+individual,1,"BROKE, ALARM-CLOCK",The alarm clock broke
+individual,2,"IN, MORNING",It happened in the morning
+individual,3,"BELONGS-TO, ALARM-CLOCK, NANCY",The alarm clock was Nancy's
+individual,4,"OVERSLEEP, NANCY",Nancy overslept
+individual,5,"WAKE-UP, NANCY",Nancy woke up
+individual,6,"LATE, NANCY, LECTURE",Nancy was late for a lecture
+individual,7,"IMPORTANT, LECTURE",The lecture was important
+individual,8,"DRESS, NANCY",Nancy got dressed
+individual,9,"QUICKLY, DRESS",She got dressed quickly
+individual,10,"LEAVE, NANCY, HOUSE",Nancy left the house
+individual,11,"RUN, NANCY, LECTURE-THEATRE",Nancy ran to the lecture theatre
+individual,12,"ARRIVE, NANCY, LECTURE-THEATRE",Nancy got to the lecture theatre
+individual,13,"EMPTY, LECTURE-THEATRE",The lecture theatre was empty
+individual,14,"MISS, NANCY, LECTURE",Nancy missed the lecture
+physical,1,"HOT, WEATHER",The weather is hot
+physical,2,"DRY, WEATHER",The weather is dry
+physical,3,"IN, SUMMER",It happens in summer
+physical,4,"REMOVE, MOISTURE, SOIL",Moisture is removed from the soil
+physical,5,"DRY, PLANTS",The plants dry out
+physical,6,"CATCH-FIRE, VEGETATION",The vegetation catches fire
+physical,7,"EASILY, CATCH-FIRE",It catches fire easily
+physical,8,"CAUSE, FOREST-FIRES",This leads to forest fires
+physical,9,"FREQUENT, FOREST-FIRES",The forest fires are frequent
+physical,10,"RELEASE, SMOKE",The fires release smoke
+physical,11,"CONTAIN, SMOKE, CARBON-MONOXIDE",The smoke contains carbon monoxide
+physical,12,"INTO, SMOKE, ATMOSPHERE",The smoke goes into the atmosphere
+physical,13,"CONTRIBUTE, GLOBAL-WARMING",The smoke contributes to global warming
+physical,14,"INCREASE, TEMPERATURE",Temperatures increase
