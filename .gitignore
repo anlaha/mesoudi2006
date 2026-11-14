@@ -62,3 +62,9 @@ rsconnect/
 /_freeze
 # figure folders Quarto can leave behind after a render
 *_files/
+
+# recalls Mesoudi shared privately; keep out of the public repo until he says otherwise
+original_code/mesoudi_supplements/
+
+# API keys
+.env
