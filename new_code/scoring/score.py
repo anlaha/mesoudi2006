@@ -8,6 +8,7 @@
 # dependencies = ["anthropic>=1,<2", "openpyxl"]
 # ///
 
+import copy
 import csv
 import hashlib
 import json
@@ -16,12 +17,15 @@ import random
 import statistics
 from concurrent.futures import ThreadPoolExecutor
 from string import Template
+import urllib.request
 
 import anthropic
 import openpyxl
 
 # Which recalls to score: "pilot" (compared with the hand codes) or "mesoudi" (compared with his scores)
-SOURCE = "mesoudi"
+SOURCE = "pilot"
+# Which model scores: "claude" (3 runs, majority vote) or "gemma" (1 run on this Mac through ollama)
+SCORER = "gemma"
 
 # The rubric, shared with coding_sheet.R so the human and model coding read the same propositions
 RUBRIC_PATH = "propositions.csv"
@@ -32,7 +36,7 @@ EXPORT_PATH = "../whispers/exports/whispers_responses.json"
 KEY_PATH = "../whispers/exports/coding_key_pilot.csv"
 # Each finished run is added here as one line, so runs already paid for aren't lost if the script stops.
 # One log per source, in the gitignored exports folder because the quotes are participant text
-RUNS_PATH = f"../whispers/exports/llm_runs_{SOURCE}.jsonl"
+RUNS_PATH = f"../whispers/exports/llm_runs_{SOURCE}_{SCORER}.jsonl"
 # The hand codes: the coding Google Sheet downloaded as .xlsx, and the tab to compare against
 CODED_PATH = "../whispers/exports/coded_pilot.xlsx"
 CODER_TAB = "Justin"
@@ -46,9 +50,13 @@ MESOUDI_SCORES_PATH = "../../original_code/mesoudi_whiten_dunbar_2006/mesoudi200
 # The model and settings from the prereg. The SDK is kept below 2.0 because 2.0
 # switches to the API version that rejects temperature, and the prereg says temperature 0
 MODEL = "claude-opus-4-6"
+GEMMA_MODEL = "gemma4:26b-a4b-it-q4_K_M"
+OLLAMA_URL = "http://localhost:11434/api/chat"
 TEMPERATURE = 0
 MAX_TOKENS = 8000  # 56 answers with quotes come to about 1,500 tokens, so plenty of room
-SEEDS = [1, 2, 3]  # one Claude run per seed, each in a different shuffled order
+# One run per seed, each in a different shuffled order. Gemma gives the same answer every time
+# at temperature 0, so it runs once, in the same order as Claude's first run
+SEEDS = [1, 2, 3] if SCORER == "claude" else [1]
 
 # The shape the answer must take. The API enforces it, so the reply is always valid JSON
 ANSWER_SCHEMA = {
@@ -72,8 +80,9 @@ ANSWER_SCHEMA = {
     "additionalProperties": False,
 }
 
-# Calls sent at once. Each takes 15-20 seconds, so 5 at a time scores the pilot in about 2 minutes
-PARALLEL_CALLS = 5
+# Calls sent at once. Each Claude call takes 15-20 seconds, so 5 at a time scores the pilot in about
+# 2 minutes. Gemma runs one at a time, since one call already uses all of this Mac's GPU
+PARALLEL_CALLS = 5 if SCORER == "claude" else 1
 
 # Opus 4.6 prices in dollars per million tokens, to work out what each call cost
 INPUT_PRICE = 5
@@ -105,7 +114,8 @@ def load_mesoudi_recalls(path):
 # A short code made from the prompt and model settings. It changes whenever either one
 # changes, so runs scored with an older prompt aren't reused
 def run_version(prompt_text):
-    return hashlib.sha256(f"{MODEL}|{TEMPERATURE}|{prompt_text}".encode()).hexdigest()[:12]
+    model = MODEL if SCORER == "claude" else GEMMA_MODEL
+    return hashlib.sha256(f"{model}|{TEMPERATURE}|{prompt_text}".encode()).hexdigest()[:12]
 
 
 # Every line of the run log, or nothing if there's no log yet
@@ -128,8 +138,11 @@ def load_runs(log, version):
 # Shows what a run will cost and asks before spending anything. The estimate is the
 # average real cost of every run in the log, under any prompt version
 def confirm_cost(calls, log):
-    per_call = sum(run["cost"] for run in log) / len(log) if log else FIRST_GUESS_PER_CALL
-    print(f"{calls} calls to make, about ${calls * per_call:.2f} (${per_call:.3f} each). Stops at ${RUN_CAP:.2f}.")
+    if SCORER == "gemma":
+        print(f"{calls} calls, free, ~{calls * 50 // 60 + 1} minutes")
+    else:
+        per_call = sum(run["cost"] for run in log) / len(log) if log else FIRST_GUESS_PER_CALL
+        print(f"{calls} calls to make, about ${calls * per_call:.2f} (${per_call:.3f} each). Stops at ${RUN_CAP:.2f}.")
     if input("Type yes to start: ").strip().lower() != "yes":
         raise SystemExit("Stopped, nothing spent.")
 
@@ -155,23 +168,49 @@ def proposition_lines(rubric):
     )
 
 
+# One Gemma call through ollama on this Mac: the same prompt and answer form as Claude, at
+# temperature 0. Its hidden thinking is turned off, which keeps it fair against Claude
+# (no extended thinking either). Each call takes about 50 seconds, almost all of it writing
+# the 56 answers at about 26 tokens a second
+def ask_gemma(prompt, ids):
+    # Gemma's answer form also lists the 56 real ids and fixes the list at 56 entries, because without
+    # that it sometimes keeps going after the last one and invents gossip_15, gossip_16, ...
+    schema = copy.deepcopy(ANSWER_SCHEMA)
+    schema["properties"]["answers"]["items"]["properties"]["id"]["enum"] = ids
+    schema["properties"]["answers"]["minItems"] = schema["properties"]["answers"]["maxItems"] = len(ids)
+    body = json.dumps({
+        "model": GEMMA_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "format": schema,
+        "options": {"temperature": TEMPERATURE},
+        "think": False,
+        "stream": False,
+    }).encode()
+    request = urllib.request.Request(OLLAMA_URL, data=body, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(request, timeout=600) as response:
+        return json.load(response)["message"]["content"]
+
+
 # One scoring call: the rubric in a shuffled order, the recall, and the model's answer
 # as {id: (present, quote)}, plus what the call cost
 def score_once(client, prompt_template, rubric, recall, shuffle_seed):
     shuffled = random.Random(shuffle_seed).sample(rubric, len(rubric))
     prompt = prompt_template.substitute(propositions=proposition_lines(shuffled), recall=recall)
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        messages=[{"role": "user", "content": prompt}],
-        output_config={"format": {"type": "json_schema", "schema": ANSWER_SCHEMA}},
-        # the 1.x SDK no longer takes temperature as an argument, so it goes in the request as is
-        extra_body={"temperature": TEMPERATURE},
-    )
-    text = next(block.text for block in response.content if block.type == "text")
+    if SCORER == "gemma":
+        text, cost = ask_gemma(prompt, [proposition_id(row) for row in rubric]), 0.0
+    else:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            messages=[{"role": "user", "content": prompt}],
+            output_config={"format": {"type": "json_schema", "schema": ANSWER_SCHEMA}},
+            # the 1.x SDK no longer takes temperature as an argument, so it goes in the request as is
+            extra_body={"temperature": TEMPERATURE},
+        )
+        text = next(block.text for block in response.content if block.type == "text")
+        usage = response.usage
+        cost = (usage.input_tokens * INPUT_PRICE + usage.output_tokens * OUTPUT_PRICE) / 1_000_000
     answers = {a["id"]: (a["present"], a["quote"]) for a in json.loads(text)["answers"]}
-    usage = response.usage
-    cost = (usage.input_tokens * INPUT_PRICE + usage.output_tokens * OUTPUT_PRICE) / 1_000_000
     return answers, cost
 
 
@@ -211,14 +250,14 @@ def load_hand_codes(path, tab, rubric):
     return codes
 
 
-# The 3 runs combined into one answer per proposition: present if at least 2 of 3 said so.
-# Each answer is (present, quote, votes). The quote kept is the first one from a run that said
-# present, and votes is how many runs said present, so 2-to-1 splits show which calls were close
+# The runs combined into one answer per proposition: present if more than half said so, which is
+# 2 of 3 for Claude and 1 of 1 for Gemma. Each answer is (present, quote, votes). The quote kept is the
+# first one from a run that said present, and votes is how many runs said present, so close calls show
 def majority(runs):
     combined = {}
     for pid in runs[0]:
         yes = [quote for present, quote in (run[pid] for run in runs) if present]
-        combined[pid] = (len(yes) >= 2, yes[0] if yes else "", len(yes))
+        combined[pid] = (len(yes) * 2 > len(runs), yes[0] if yes else "", len(yes))
     return combined
 
 
@@ -248,7 +287,7 @@ def compare(combined, hand, recalls, rubric):
             present, quote, votes = combined[code][pid]
             if present != hand[code][pid]:
                 who = "model only" if present else "hand only"
-                print(f"\n{code} {pid} ({row['point']}): {who}, {votes}/3 runs said present")
+                print(f"\n{code} {pid} ({row['point']}): {who}, {votes}/{len(SEEDS)} runs said present")
                 print(f"  recall: {recalls[code]}")
                 if quote:
                     print(f"  quote: {quote!r}")
