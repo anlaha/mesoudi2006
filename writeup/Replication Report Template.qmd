@@ -185,7 +185,8 @@ Each recall was stored exactly as typed, and the version passed to the next part
 Responses are loaded from the study app's export, and because the pilot ran on the test link, only test rows are kept for the pilot and only real rows for the study.
 
 ```{r import-data}
-# every row from the study app, saved by `npm run export` in whispers
+# The raw data live in the whispers PocketBase on sciminds.cloud (lab
+# login needed). `npm run export` in whispers saves every row to this file
 export_path <- "../new_code/whispers/exports/whispers_responses.json"
 # exports/ is gitignored, so a fresh clone has no export file at all
 responses <- if (file.exists(export_path)) {
@@ -211,6 +212,59 @@ which_data <- if (pilot) "pilot" else "study"
 coded_path <- paste0(exports, "coded_", which_data, ".xlsx")
 key_path <- paste0(exports, "coding_key_", which_data, ".csv")
 has_codes <- file.exists(coded_path)
+
+# the frozen Claude scorer's scores, one row per recall and paragraph, which
+# new_code/scoring/score.py saves into the same folder
+scores_path <- paste0(exports, "llm_scores_", which_data, "_claude.csv")
+has_scores <- has_data && file.exists(scores_path)
+```
+
+```{r exclusion-rules}
+#| eval: !expr has_data
+# My preregistered exclusion rules, written out as code. The app applied
+# the same rules live (src/lib/server/gate.js in whispers), so this also
+# checks every decision it made
+canary_word <- "erstwhile"  # the word the hidden note asks an AI to use
+min_typed_share <- 0.5      # at least half as many keystrokes as characters
+min_words <- 10             # nearly empty: under 10 words,
+min_word_share <- 0.25      #   and under a quarter of the words it read
+min_overlap <- 0.15         # off topic: under 15% of its long words are in
+                            #   what it read
+
+# a text's 4+ letter words, which skips "the", "and", "was"
+long_words <- function(text) {
+  unique(str_extract_all(tolower(text), "[a-z]{4,}")[[1]])
+}
+
+rules <- responses |>
+  filter(status %in% c("passed", "held", "excluded")) |>
+  mutate(
+    # clear fails: excluded, and the generation runs again
+    canary = str_detect(tolower(recall_raw), canary_word),
+    not_typed = lengths(keystroke_log$large_insertions) > 0 |
+      keystroke_log$keystrokes < min_typed_share * nchar(recall_raw),
+    said_outside_help = outside_help %in% "Yes",
+    # borderline: held until I read the recall
+    near_empty = str_count(recall_raw, "\\S+") < min_words &
+      str_count(recall_raw, "\\S+") <
+        min_word_share * str_count(input_text, "\\S+"),
+    # a recall with no long words has nothing to compare: not off topic
+    off_topic = coalesce(map2_dbl(recall_raw, input_text, \(recall, read)
+      mean(long_words(recall) %in% long_words(read))) < min_overlap, FALSE),
+    failed_instructed = !instructed_passed
+  )
+
+# how many recalls each rule caught
+rules |>
+  summarize(across(canary:failed_instructed, sum)) |>
+  pivot_longer(everything(), names_to = "rule", values_to = "recalls") |>
+  knitr::kable()
+
+# every recall a rule caught, with what the app decided
+rules |>
+  filter(if_any(canary:failed_instructed)) |>
+  select(chain, generation, status, canary:failed_instructed) |>
+  knitr::kable()
 ```
 
 ```{r exclusions}
@@ -283,7 +337,7 @@ hand_scores <- hand_codes |>
   left_join(select(rubric, point, material), by = "point") |>
   summarize(score = sum(present == 1, na.rm = TRUE),
             .by = c(coder, recall, material)) |>
-  # skip tabs nobody has coded yet, since their blank cells would count as zeros
+  # skip tabs nobody has coded yet, since blank cells would count as zeros
   filter(sum(score) > 0, .by = coder) |>
   left_join(select(key, recall, chain, generation), by = "recall")
 
@@ -304,6 +358,36 @@ Mesoudi et al. (2006) conclude that "human cultural transmission is biased towar
 I tested the claim in one step, using each chain's social minus non-social difference and the two-sided sign-flip permutation test described in the Power Analysis, with 5,000 flips at $\alpha$ = 0.05. The test assumes only that, with no effect, each chain's difference is symmetric around zero, so it does not depend on normality, which 20 chains are too few to check. Because it is a single comparison of two things, social and non-social, it needs no sphericity correction and no correction for multiple comparisons. The original's $\alpha$ of 0.01 was the 0.05 split across five comparisons.
 
 If the average difference is positive and the test is significant, the effect replicates. Additionally, I report the original ANOVA and pairwise comparisons alongside it, so my results can be compared directly with the original's, and I plot correct recall by generation and material next to the original's Figure 4.
+
+#### Confirmatory test on pilot data
+
+The same test on the pilot chains, scored by the frozen Claude scorer. Only chains with all four generations count, so the pilot shows that the code runs on real recalls, and says nothing about the effect.
+
+```{r confirmatory-pilot}
+#| eval: !expr has_scores
+# the pilot's recall codes (R01, R02, ...) are matched to their chain and
+# generation through the coding key. The main study's codes (C03G2) say both
+llm_scores <- read_csv(scores_path, show_col_types = FALSE)
+if (pilot) {
+  key <- read_csv(key_path, show_col_types = FALSE)
+  llm_scores <- left_join(llm_scores, key, by = "recall")
+} else {
+  llm_scores <- mutate(llm_scores,
+                       chain = as.integer(substr(recall, 2, 3)),
+                       generation = as.integer(substr(recall, 5, 5)))
+}
+complete_scores <- filter(llm_scores, chain %in% complete$chain)
+pilot_differences <- chain_difference(complete_scores)
+
+pilot_differences |>
+  select(chain, gossip, social, individual, physical, difference) |>
+  knitr::kable(digits = 2)
+
+tibble(chains = nrow(pilot_differences),
+       mean_difference = mean(pilot_differences$difference),
+       p = sign_flip_p(pilot_differences$difference)) |>
+  knitr::kable(digits = 3)
+```
 
 #### Confirmatory test on simulated data
 
