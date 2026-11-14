@@ -6,11 +6,15 @@ This repository holds my preregistered replication of Experiment 2 from Mesoudi,
 
 - `writeup/Replication Report Template.qmd`: the report, rendered to `writeup/Replication-Report-Template.pdf`
 - `new_code/power/power_sim.R`: the power simulation. The report runs it live, chunk by chunk
+- `new_code/scoring/`: the LLM scorer (`score.py`), its prompt (`prompt.txt`) and the 56 propositions (`propositions.csv`), frozen at the tag `llm-scorers-frozen` before any main data were collected
+- `new_code/coding_sheet.R`: makes the blind hand-coding sheet
 - `new_code/whispers/`: the web app participants use, kept in its own repository and linked as a git submodule
 - `original_paper/`: the original article
 - `original_code/mesoudi_whiten_dunbar_2006/`: Mesoudi's published data, reanalysis code, propositional coding sheet and coding guide, linked as a git submodule pinned to the version the report uses. To get it, clone with `git clone --recursive`, or run `git submodule update --init` in an existing clone
 - `presentation/`: slides for the final presentation
 - `data/`: empty until data collection
+
+Raw data is stored in private database.
 
 ## Rendering the report
 
