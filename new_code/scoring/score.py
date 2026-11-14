@@ -24,7 +24,7 @@ import openpyxl
 
 # Which recalls to score: "pilot" (compared with the hand codes), "mesoudi" (compared with his scores)
 # or "study" (the main study's real chains, compared with the hand-coded third once it exists)
-SOURCE = "study"
+SOURCE = "pilot"
 # Which model scores: "claude" (3 runs, majority vote) or "gemma" (1 run on this Mac through ollama)
 SCORER = "claude"
 
@@ -38,6 +38,8 @@ KEY_PATH = "../whispers/exports/coding_key_pilot.csv"
 # Each finished run is added here as one line, so runs already paid for aren't lost if the script stops.
 # One log per source, in the gitignored exports folder because the quotes are participant text
 RUNS_PATH = f"../whispers/exports/llm_runs_{SOURCE}_{SCORER}.jsonl"
+# The final scores, one row per recall and paragraph, which the report reads
+SCORES_PATH = f"../whispers/exports/llm_scores_{SOURCE}_{SCORER}.csv"
 # The hand codes: the coding Google Sheet downloaded as .xlsx, and the tab to compare against
 CODED_PATH = "../whispers/exports/coded_pilot.xlsx"
 # The main study's hand-coded third: its coding sheet downloaded as .xlsx, and the key from coding_sheet.R
@@ -297,6 +299,17 @@ def compare(combined, hand, recalls, rubric):
                     print(f"  quote: {quote!r}")
 
 
+# Each recall's score per paragraph (how many of its 14 propositions are present), saved for the report
+def save_scores(combined, path):
+    with open(path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["recall", "material", "score"])
+        for code in sorted(combined):
+            for material in ["gossip", "social", "individual", "physical"]:
+                score = sum(present for pid, (present, _, _) in combined[code].items() if pid.split("_")[0] == material)
+                writer.writerow([code, material, score])
+
+
 # Mesoudi's published scores as {recall code: {material: propositions correct}}
 def load_mesoudi_scores(path):
     scores = {}
@@ -405,10 +418,13 @@ if todo:
                 print("   ", problem)
 print(f"{len(runs)} of {len(recalls) * len(SEEDS)} runs done under prompt version {version}")
 
-# Compare the finished recalls with the hand codes (pilot and study) or with Mesoudi's scores
+# Save the scores, then compare the finished recalls with the hand codes (pilot and study) or with Mesoudi's scores
 combined = combined_answers(runs, recalls, rubric)
+save_scores(combined, SCORES_PATH)
 if SOURCE == "pilot":
-    compare(combined, load_hand_codes(CODED_PATH, CODER_TAB, rubric), recalls, rubric)
+    # only the recalls that have hand codes yet
+    hand = load_hand_codes(CODED_PATH, CODER_TAB, rubric)
+    compare({code: combined[code] for code in hand if code in combined}, hand, recalls, rubric)
 elif SOURCE == "study" and os.path.exists(STUDY_CODED_PATH):
     # the hand codes are named R01, R02, ..., and the key turns them back into chain and generation
     with open(STUDY_KEY_PATH) as f:
