@@ -22,10 +22,11 @@ import urllib.request
 import anthropic
 import openpyxl
 
-# Which recalls to score: "pilot" (compared with the hand codes) or "mesoudi" (compared with his scores)
-SOURCE = "pilot"
+# Which recalls to score: "pilot" (compared with the hand codes), "mesoudi" (compared with his scores)
+# or "study" (the main study's real chains, compared with the hand-coded third once it exists)
+SOURCE = "study"
 # Which model scores: "claude" (3 runs, majority vote) or "gemma" (1 run on this Mac through ollama)
-SCORER = "gemma"
+SCORER = "claude"
 
 # The rubric, shared with coding_sheet.R so the human and model coding read the same propositions
 RUBRIC_PATH = "propositions.csv"
@@ -39,6 +40,9 @@ KEY_PATH = "../whispers/exports/coding_key_pilot.csv"
 RUNS_PATH = f"../whispers/exports/llm_runs_{SOURCE}_{SCORER}.jsonl"
 # The hand codes: the coding Google Sheet downloaded as .xlsx, and the tab to compare against
 CODED_PATH = "../whispers/exports/coded_pilot.xlsx"
+# The main study's hand-coded third: its coding sheet downloaded as .xlsx, and the key from coding_sheet.R
+STUDY_CODED_PATH = "../whispers/exports/coded_study.xlsx"
+STUDY_KEY_PATH = "../whispers/exports/coding_key_study.csv"
 CODER_TAB = "Justin"
 
 # Mesoudi's 40 Experiment 2 recalls, which he shared privately (gitignored folder). The .txt was
@@ -350,12 +354,18 @@ with open(PROMPT_PATH) as f:
     prompt_text = f.read()
 prompt_template = Template(prompt_text)
 
-# Load the recalls by code: the pilot's R01, R02, ... or Mesoudi's C01G1, C01G2, ...
+# Load the recalls by code: the pilot's R01, R02, ..., or C01G1, C01G2, ... for Mesoudi's and the main study's
 if SOURCE == "pilot":
     with open(EXPORT_PATH) as f:
         rows = {row["id"]: row for row in json.load(f)}
     with open(KEY_PATH) as f:
         recalls = {line["recall"]: rows[line["id"]]["recall_raw"] for line in csv.DictReader(f)}
+elif SOURCE == "study":
+    with open(EXPORT_PATH) as f:
+        rows = json.load(f)
+    # every accepted recall from the real chains, named by chain and generation like Mesoudi's (C03G2)
+    recalls = {f"C{row['chain']:02d}G{row['generation']}": row["recall_raw"]
+               for row in rows if not row["test"] and row["status"] == "passed"}
 else:
     recalls = load_mesoudi_recalls(MESOUDI_RECALLS_PATH)
 
@@ -395,9 +405,15 @@ if todo:
                 print("   ", problem)
 print(f"{len(runs)} of {len(recalls) * len(SEEDS)} runs done under prompt version {version}")
 
-# Compare the finished recalls with the hand codes (pilot) or with Mesoudi's scores
+# Compare the finished recalls with the hand codes (pilot and study) or with Mesoudi's scores
 combined = combined_answers(runs, recalls, rubric)
 if SOURCE == "pilot":
     compare(combined, load_hand_codes(CODED_PATH, CODER_TAB, rubric), recalls, rubric)
-elif combined:
+elif SOURCE == "study" and os.path.exists(STUDY_CODED_PATH):
+    # the hand codes are named R01, R02, ..., and the key turns them back into chain and generation
+    with open(STUDY_KEY_PATH) as f:
+        names = {line["recall"]: f"C{int(line['chain']):02d}G{line['generation']}" for line in csv.DictReader(f)}
+    hand = {names[code]: answers for code, answers in load_hand_codes(STUDY_CODED_PATH, CODER_TAB, rubric).items()}
+    compare({code: combined[code] for code in hand if code in combined}, hand, recalls, rubric)
+elif SOURCE == "mesoudi" and combined:
     compare_totals(combined, load_mesoudi_scores(MESOUDI_SCORES_PATH), recalls)
