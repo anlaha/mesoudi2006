@@ -16,6 +16,8 @@ This repository holds my preregistered replication of Experiment 2 from Mesoudi,
 
 Raw data is stored in private database.
 
+Pre-registration (release `v1.0-prereg`): https://doi.org/10.5281/zenodo.24232620
+
 ## Rendering the report
 
 The report needs R with tidyverse, and Quarto. From `writeup/`, run:
