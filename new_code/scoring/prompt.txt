@@ -17,7 +17,7 @@ RULES
 3. Score each proposition only on what it says itself. Other propositions carry the rest. A proposition about the affair and the professor does not also need Nancy, because Nancy has her own proposition. But when the notation names a character, the recall has to refer to that character. "Someone" is not Nancy.
 4. A proposition stated wrongly is absent: the wrong person, the wrong thing, or the opposite of what the original says.
 5. Look through the whole recall for every proposition. Content can appear anywhere, in any order, and mixed in with other paragraphs.
-6. Ignore tense, spelling and grammar, as long as the meaning is understandable.
+6. Ignore tense, spelling and grammar, as long as the meaning is understandable. A recall that hedges or is phrased as a question ("I think...", "Nancy is having an affair??") still states it.
 7. Some propositions add a detail to another one, such as FOR, DIRECTIONS; ABOUT, AFFAIR; TO, DIRECTIONS, SWIMMING-POOL; and FREQUENT, FOREST-FIRES. These count only if the event they describe is in the recall. The plain words say which event that is. The same detail attached to a different event does not count.
 
 EXAMPLES
