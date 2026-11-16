@@ -31,6 +31,7 @@ My current research asks how descriptions of people change as they pass between 
 ::: {.callout-note}
 ## Links
 Repository: [https://github.com/kyaneos/mesoudi2006](https://github.com/kyaneos/mesoudi2006)  
+Preregistration: [doi.org/10.5281/zenodo.24232620](https://doi.org/10.5281/zenodo.24232620) (OSF registration: [osf.io/r27u4](https://osf.io/r27u4))  
 Original paper: [2006_mesoudi_social_information_bias.pdf](https://github.com/kyaneos/mesoudi2006/blob/main/original_paper/2006_mesoudi_social_information_bias.pdf) (Retrieved on Oct 12, 2026 from [doi.org/10.1348/000712605X85871](https://doi.org/10.1348/000712605X85871))
 :::
 
