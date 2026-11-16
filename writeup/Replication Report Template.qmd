@@ -183,7 +183,7 @@ You can comment this section out prior to final report with data collection.
 
 Each recall was stored exactly as typed, and the version passed to the next participant, with only spacing corrected, was stored separately. All scoring used the original. Because recalls that failed an exclusion check were removed and their generation rerun during collection, the data contain only accepted recalls, including borderline recalls that I reviewed and accepted before they were passed on. Each remaining recall was scored against the 56 propositions of the four original paragraphs, giving four scores per participant. About a third of the chains, chosen at random before scoring, were also hand coded for the validation checks in the Analysis Plan. The final data have one row per participant per paragraph, which records the chain, the generation, the material, the paragraph's position in the chain's original reading order, and the number of its propositions recalled correctly.
 	
-Responses are loaded from the study app's export, and because the pilot ran on the test link, only test rows are kept for the pilot and only real rows for the study.
+Responses are loaded from the study app's export, and because the pilot ran on the test chains, only test rows are kept for the pilot and only real rows for the study.
 
 ```{r import-data}
 # The raw data live in the whispers PocketBase on sciminds.cloud (lab
@@ -199,7 +199,7 @@ responses <- if (file.exists(export_path)) {
 # chunks below
 has_data <- length(responses) > 0
 
-# TRUE: the pilot (classmates on the test link). FALSE: the real study
+# TRUE: the pilot (test chains). FALSE: the real study
 pilot <- TRUE
 if (has_data) responses <- filter(responses, test == pilot)
 knitr::kable(tibble(rows = if (has_data) nrow(responses) else 0))
