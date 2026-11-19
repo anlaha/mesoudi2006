@@ -225,6 +225,11 @@ Responses are loaded from the study app's export, and because the pilot ran on t
 #| eval: !expr has_data
 ```
 
+```{r asserts}
+#| eval: !expr has_data
+#| results: hide
+```
+
 ```{r hand-codes}
 #| eval: !expr has_codes
 ```

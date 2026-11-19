@@ -182,6 +182,26 @@ ggplot(reading, aes(x = generation, y = wpm)) +
 complete <- count(recalls, chain) |> filter(n == 4)
 recalls <- filter(recalls, chain %in% complete$chain)
 
+## ---- asserts ----
+# rules the prepared data must follow. If one breaks, the render stops
+library(assertthat)
+
+assert_that(all(responses$test == pilot),
+            msg = "the data mix test rows and real rows")
+
+generations <- recalls |>
+  summarize(gens = paste(sort(generation), collapse = ""), .by = chain)
+assert_that(all(generations$gens == "1234"),
+            msg = "a complete chain doesn't have exactly generations 1 to 4")
+
+# each recall next to the one its chain passed on just before it
+handoffs <- recalls |>
+  arrange(chain, generation) |>
+  mutate(passed_on = lag(recall_passed), .by = chain) |>
+  filter(generation > 1)
+assert_that(all(handoffs$input_text == handoffs$passed_on),
+            msg = "a generation didn't read what the one before it passed on")
+
 ## ---- hand-codes ----
 # the rubric tab turns each column header back into its material. The
 # material is only written on each block's first row, so it's filled down
