@@ -64,11 +64,11 @@ boot_low_share <- boot_ci[1] / mean(real_differences)
 
 ## ---- mesoudi-effects ----
 # readable test names, in the order the tables and figure show them
-test_labels <- c(difference = "social vs non-social",
-                 gossip_vs_individual = "gossip vs individual",
-                 gossip_vs_physical = "gossip vs physical",
-                 social_vs_individual = "social vs individual",
-                 social_vs_physical = "social vs physical")
+test_labels <- c(difference = "Social vs non-social",
+                 gossip_vs_individual = "Gossip vs individual",
+                 gossip_vs_physical = "Gossip vs physical",
+                 social_vs_individual = "Social vs individual",
+                 social_vs_physical = "Social vs physical")
 
 # Mesoudi's effect for each test: the mean and SD of his 10 chain
 # differences, and the cutoff it is tested at (0.01 for the pairs, his
@@ -80,7 +80,7 @@ mesoudi_effects <- chain_difference(mesoudi) |>
                        labels = test_labels)) |>
   group_by(test) |>
   summarize(mean = mean(chain_difference), sd = sd(chain_difference)) |>
-  mutate(alpha = if_else(test == "social vs non-social", 0.05, 0.01))
+  mutate(alpha = if_else(test == "Social vs non-social", 0.05, 0.01))
 
 knitr::kable(mesoudi_effects, digits = 2,
              col.names = c("test", "mean difference", "SD", "cutoff"))
@@ -136,8 +136,8 @@ ggplot(power, aes(x = n_chains, y = power, color = factor(effect))) +
   scale_x_continuous(breaks = c(12, 24, 36, 48)) +
   scale_color_manual(values = sciminds_ramp,
                      labels = c("50%", "75%", "100%")) +
-  labs(x = "number of chains", y = "power",
-       color = "true effect\n(share of\nMesoudi's)")
+  labs(x = "Number of chains", y = "Power",
+       color = "True effect\n(share of\nMesoudi's)")
 
 ## ---- chains-needed ----
 # the fewest chains that reach a power target, or "> 48" if none do
@@ -163,17 +163,17 @@ knitr::kable(chains_table, digits = 2,
 
 # planned test at 20 chains and 75% of the effect
 power_at_20 <- power |>
-  filter(test == "social vs non-social", effect == 0.75, n_chains == 20) |>
+  filter(test == "Social vs non-social", effect == 0.75, n_chains == 20) |>
   pull(power)
 
 # and at 50% of the effect
 power_at_20_half <- power |>
-  filter(test == "social vs non-social", effect == 0.5, n_chains == 20) |>
+  filter(test == "Social vs non-social", effect == 0.5, n_chains == 20) |>
   pull(power)
 
 # the two social-paragraph pairs at 20 chains and 75% of the effect, averaged
 social_pairs_at_20 <- power |>
-  filter(test %in% c("social vs individual", "social vs physical"),
+  filter(test %in% c("Social vs individual", "Social vs physical"),
          effect == 0.75, n_chains == 20) |>
   pull(power) |>
   mean()

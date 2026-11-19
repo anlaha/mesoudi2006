@@ -14,10 +14,17 @@ format:
       text: |
         \usepackage{fvextra}
         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,commandchars=\\\{\}}
+        \usepackage{floatrow}
+        \floatsetup[table]{capposition=bottom, objectset=raggedright} % captions under tables, tables on the left
+        \setlength\LTleft{0pt}\setlength\LTright{\fill} % uncaptioned tables on the left too
+        \captionsetup[table]{singlelinecheck=false} % short captions on the left too
+        \floatplacement{table}{H} % tables stay where they are in the text
+        \floatplacement{figure}{H}
 knitr:
   opts_chunk:
     fig.path: "figures/"
     dev: "png" # png so the figure also shows on GitHub
+    echo: false # code stays in the .qmd, only results show in the PDF
 ---
 
 <!-- Replication reports should all use this template to standardize reporting across projects.  These reports will be public supplementary materials that accompany the summary report(s) of the aggregate results. -->
@@ -26,7 +33,7 @@ knitr:
 
 [Mesoudi, Whiten, and Dunbar (2006)](https://doi.org/10.1348/000712605X85871) asked whether some kinds of information survive transmission better than others. They used the transmission chain method, in which one participant’s recall becomes the subsequent participant’s stimulus, so that information fidelity and loss can be tracked as it travels. In Experiment 2, the first participant in a four-person chain read four short paragraphs, wrote down what they remembered, and then that written recall was given to the next participant in the chain. The four paragraphs matched in structure and were close in length, each containing 14 propositions across 5 sentences and written as a chain of events linked causally and temporally so that no paragraph was more coherent than another. However, the content type of these paragraphs differed: gossip about third-party social relationships, ordinary non-gossip social interactions, individual behavior, and physical events. Every generation of the chain’s recall was scored against the original paragraph, using [Kintsch (1974)](https://doi.org/10.4324/9781315794563) propositional analysis. The target finding for this replication is that social information survived transmission better than non-social information, which the original showed through the effect of content type on how many original propositions were recalled correctly, F(3, 24\) \= 12.99. Gossip and non-gossip social information survived transmission better than individual behavior or physical events, and the contrast between gossip and non-gossip social information was null at F(1, 9\) \= 2.40, which the authors interpreted as being due to the presence of people interacting with each other rather than the scandalous nature of the gossip content. 
 
-My current research asks how descriptions of people change as they pass between people, analyzing the compression and content convergence of social information across generations of transmission. I chose to replicate Mesoudi et al.’s experiment because it is a simpler version of the study I am about to run. However, while Mesoudi et al. are interested in how differing content in general survives transmission, I am interested in how differing *social* content (relationships, traits, actions, locations) about a single person survives transmission when presented all at once in one recall. Their four paragraphs were designed to vary widely from non-social to social in content, so this replication tested whether a multi-generational chain is a sensitive enough instrument to detect content effects at all. If it could not separate narratives that differ this greatly, it would likely also not separate smaller differences in social content such as relationships and traits. I replicated Experiment 2 online with US adults from Prolific, through a web application I built for my own chain study that passed each recall to the next participant (see Procedure). The main differences from the original were running the study online, scoring recalls with LLMs, and setting the sample size by simulation. Because online participants may be less attentive or use outside help, the web application added a minimum reading time, attention checks, and screening for AI-assisted recalls. Scoring every recall by hand was not feasible at scale, so recalls were scored by LLMs, which [Martinez (2024)](https://doi.org/10.3758/s13428-024-02480-7) found to reach an r of 0.86 to 0.94 against manual scoring of story recall, and validated against my hand coding of a subset. Finally, because the original reported no power analysis, the number of chains came from a simulation. Each is described in Methods.
+My current research asks how descriptions of people change as they pass between people, analyzing the compression and content convergence of social information across generations of transmission. I chose to replicate Mesoudi et al.’s experiment because it is a simpler version of the study I am about to run. However, while Mesoudi et al. are interested in how differing content in general survives transmission, I am interested in how differing *social* content (relationships, traits, actions, locations) about a single person survives transmission when presented all at once in one recall. Their four paragraphs were designed to vary widely from non-social to social in content, so this replication tested whether a multi-generational chain is a sensitive enough instrument to detect content effects at all. If it could not separate narratives that differ this greatly, it would likely also not separate smaller differences in social content such as relationships and traits. I replicated Experiment 2 online with US adults from Prolific, through a web application built for a planned chain study that passed each recall to the next participant (see Procedure). The main differences from the original were running the study online, scoring recalls with LLMs, and setting the sample size by simulation. Because online participants may be less attentive or use outside help, the web application added a minimum reading time, attention checks, and screening for AI-assisted recalls. Scoring every recall by hand was not feasible at scale, so recalls were scored by LLMs, which [Martinez (2024)](https://doi.org/10.3758/s13428-024-02480-7) found to reach an r of 0.86 to 0.94 against manual scoring of story recall, and validated against hand coding of a subset. Finally, because the original reported no power analysis, the number of chains came from a simulation. Each is described in Methods.
 
 ::: {.callout-note}
 ## Links
@@ -42,7 +49,7 @@ Original paper: [2006_mesoudi_social_information_bias.pdf](https://github.com/ky
 
 #### One row of data
 
-Each row of my data is one participant's recall of one paragraph. It records the chain, the participant's generation, which material the paragraph was, the paragraph's position in the chain's original reading order (1 to 4), and the score. The score is the number of the paragraph's 14 original propositions the participant recalled correctly, scored against the original (F0) paragraph at every generation, as in Mesoudi et al. (2006). Each participant contributes four rows, so 20 chains of four generations give 320 rows.
+Each row of the data is one participant's recall of one paragraph. It records the chain, the participant's generation, which material the paragraph was, the paragraph's position in the chain's original reading order (1 to 4), and the score. The score is the number of the paragraph's 14 original propositions the participant recalled correctly, scored against the original (F0) paragraph at every generation, as in Mesoudi et al. (2006). Each participant contributes four rows, so 20 chains of four generations give 320 rows.
 
 | chain | generation | material | position | score |
 |-------|------------|----------|----------|-------|
@@ -52,13 +59,15 @@ Each row of my data is one participant's recall of one paragraph. It records the
 
 Because the chain is the unit of analysis, the simulation skips individual recalls and simulates the one number per chain that the planned test sees, the chain's social minus non-social difference (defined below). A simulated study draws one difference per chain from a normal distribution with the SD of Mesoudi's 10 real differences and a mean set to a share of his mean difference. Each of the four pairwise differences is simulated the same way.
 
-The mean and SD come from the raw data for Experiment 2, which Mesoudi has since published ([github.com/amesoudi/mesoudi_whiten_dunbar_2006](https://github.com/amesoudi/mesoudi_whiten_dunbar_2006)). His `correct_recall` column is the same measure as my `score`, so I rename it.
+The mean and SD come from the raw data for Experiment 2, which Mesoudi has since published ([github.com/amesoudi/mesoudi_whiten_dunbar_2006](https://github.com/amesoudi/mesoudi_whiten_dunbar_2006)). His `correct_recall` column is the same measure as `score` here, so it is renamed.
 
 All of the code in this section is in `new_code/power/power_sim.R` and runs live in this report.
 
 ```{r read-script}
 #| include: false
 knitr::read_chunk("../new_code/power/power_sim.R")
+knitr::read_chunk("../new_code/analysis/data_prep.R")
+knitr::read_chunk("../new_code/analysis/mesoudi_figure_4.R")
 ```
 
 ```{r setup}
@@ -122,7 +131,7 @@ The original study ran 10 chains and found that social material beat non-social 
 
 ### Planned Sample
 
-I recruited adults living in the US through Prolific, paid $3 for an estimated 15 minutes. Prolific's filters required fluent English and an approval rate of at least 95%, and the web application ran only on a laptop or desktop computer. Based on the power analysis, I preregistered 20 chains (80 participants). Because each generation could start only after the one before it, places were released 20 at a time, one generation at a time, and each excluded recall added one place for its rerun. Collection ended when 20 chains were complete, so this number alone determined the final sample.
+I recruited adults living in the US through Prolific, paid $3 for an estimated 10 minutes. Prolific's filters required fluent English and an approval rate of at least 95%, and the web application ran only on a laptop or desktop computer. Based on the power analysis, I preregistered 20 chains (80 participants). Because each generation could start only after the one before it, places were released 20 at a time, one generation at a time, and each excluded recall added one place for its rerun. Collection ended when 20 chains were complete, so this number alone determined the final sample.
 
 ### Materials
 
@@ -132,7 +141,7 @@ The materials are the four paragraphs reproduced in Appendix B of Mesoudi et al.
 
 Because the design of Experiment 2 was "largely identical to that of Experiment 1," I followed the procedure described for Experiment 1: "A booklet was produced that contained on the first page the instruction, 'please read the following text through once. When you have finished turn the page', followed by the material. The second page contained the instruction, 'now, without turning back, please write out as best you can the text you just read. Be as accurate as possible, but don't worry if you can't remember it all. When you have finished turn the page', followed by a blank space for recall. A final sheet solicited the age and gender of the participant, and thanked them for participating, whereupon the experimenter debriefed them as to the nature of the study." As in the original, "no distractor task was performed, and no time limit was set. At no point in the procedure did either the printed instructions or the experimenter state that the experiment was a memory test, that the material had come from another participant, or that their recall would be passed on to another participant."
 
-In my version, the booklet was a web application I built, which showed each page as its own screen, kept the original instructions word for word, collected each recall, and passed it to the next participant in the chain. Before the task, participants answered a question on English fluency and an instructions check that repeated until they passed it. The text screen then held them for a minimum reading time, set at 400 words per minute for the length of their text. This is faster than a typical reading pace, so the minimum stopped skimming without holding up a normal reader. The text could not be selected or copied. Because participants could not physically turn the page back, the text disappeared before the recall screen appeared. On the recall screen, pasting was blocked, and the application logged how each recall was typed and whether the participant left the page. Both screens also carried instructions that participants could not see, which directed an AI to use an uncommon word in its response, so that AI-assisted recalls could be flagged. After recalling, participants answered an honesty item about outside help and an instructed-response item alongside the age and gender questions. They then read the debrief and returned to Prolific. In the original, the experimenter typed each recall into the next participant's booklet. My application passed each recall on only once it cleared the exclusion checks in the Analysis Plan, automatically correcting its spacing and nothing else. Participants were paid whether or not their recall was excluded.
+In this replication, the booklet was a web application, which showed each page as its own screen, kept the original instructions word for word, collected each recall, and passed it to the next participant in the chain. Before the task, participants answered a question on English fluency and an instructions check that repeated until they passed it. The text screen then held them for a minimum reading time, set at 400 words per minute for the length of their text. This is faster than a typical reading pace, so the minimum stopped skimming without holding up a normal reader. The text could not be selected or copied. Because participants could not physically turn the page back, the text disappeared before the recall screen appeared. On the recall screen, pasting was blocked, and the application logged how each recall was typed and whether the participant left the page. Both screens also carried instructions that participants could not see, which directed an AI to use an uncommon word in its response, so that AI-assisted recalls could be flagged. After recalling, participants answered an honesty item about outside help and an instructed-response item alongside the age and gender questions. They then read the debrief and returned to Prolific. In the original, the experimenter typed each recall into the next participant's booklet. My application passed each recall on only once it cleared the exclusion checks in the Analysis Plan, automatically correcting its spacing and nothing else. Participants were paid whether or not their recall was excluded.
 
 ### Analysis Plan
 
@@ -144,12 +153,12 @@ Additionally, I report three secondary analyses: 1) the original 4 (material) x 
 
 Recalls were scored by two LLMs at temperature 0, Claude Opus 4.6 and a local Gemma 4 model, with the exact model versions recorded in the frozen scoring code. Each checked the whole recall for each of the 56 propositions. Following Mesoudi's coding guide, a proposition counted as present only if the recall stated it, in any words with the same meaning, such as "class" for "lecture". Nothing a reader would have to infer was credited. Because Claude's output can vary between runs even at temperature 0, it scored each recall three times, with the propositions in a different random order each time, and its score for each proposition was the majority of the three. Gemma gives the same output every time at temperature 0, so it scored each recall once. Because a scoring prompt can be adjusted until it gives a desired answer, the prompt was developed only on the pilot chains and on the original study's recalls, which Mesoudi shared and scored himself, then frozen along with both model versions before any main data were scored. Whichever model agreed better with the human scores on these recalls was the primary scorer, and the other served as a sensitivity check.
 
-I hand coded about a third of the chains using Mesoudi's propositional breakdown. Human coders made the same judgment as the models, marking each of the 56 propositions present or absent in any wording. The original first divided each recall into its own propositions, which gave a measure of recall quantity. Because my confirmatory test only uses recall accuracy, I skipped this step. Because I knew the hypothesis, I coded these recalls in shuffled order with the chain and generation hidden. The material could not be hidden, since the text itself gives it away. Additionally, if a second coder was available, they would code a subset of the same chains blind to the hypothesis, and I would report our agreement alongside the original's.
+I hand coded about a third of the chains using Mesoudi's propositional breakdown. Human coders made the same judgment as the models, marking each of the 56 propositions present or absent in any wording. The original first divided each recall into its own propositions, which gave a measure of recall quantity. Because the confirmatory test only uses recall accuracy, I skipped this step. Because I knew the hypothesis, I coded these recalls in shuffled order with the chain and generation hidden. The material could not be hidden, since the text itself gives it away. Additionally, if a second coder was available, they would code a subset of the same chains blind to the hypothesis, and I would report our agreement alongside the original's.
 
-Human coding is the standard, so automated scoring passed only if it agreed with my hand coding at least as well as two human coders agree with each other:
+Human coding is the standard, so automated scoring passed only if it agreed with the hand coding at least as well as two human coders agree with each other:
 
 - Each model's paragraph totals had to correlate with mine at least as highly as the two human coders' totals correlated, or at a Pearson r of at least 0.90 if no second coder was available, with an ICC lower 95% bound of at least 0.75.
-- Because a scorer that credits one kind of material more readily than another would bias the confirmatory test directly, I computed each hand-coded chain's difference from the model's scores and from mine. The mean absolute gap between them had to be no larger than the gap between the two human coders, or 0.5 propositions if no second coder was available.
+- Because a scorer that credits one kind of material more readily than another would bias the confirmatory test directly, I computed each hand-coded chain's difference from the model's scores and from the hand codes. The mean absolute gap between them had to be no larger than the gap between the two human coders, or 0.5 propositions if no second coder was available.
 
 If either condition failed, or if the two models disagreed on the confirmatory result, meaning their mean differences had opposite signs or only one was significant, I would hand code every recall. I also report Claude's agreement with itself across its three runs, the agreement between the two models, and Cohen's kappa for single propositions. All human and model scores are released with the analysis code.
 
@@ -157,11 +166,11 @@ Exclusions targeted only recalls that did not reflect the task. A poor recall is
 
 ### Differences from Original Study
 
-The original sample was 40 students who "participated voluntarily, were unpaid and had normal reading and writing ability," run in person "in groups of between one and five." My sample was adults living in the US, recruited through Prolific and participating alone and online for pay. The original's students were likely at the authors' UK universities, so my sample also differs in country and is not limited to students. The number of chains was set by the power simulation. The original also balanced chains by gender, with five female and five male chains. I collected gender but did not balance or model it. Neither experiment found a gender effect (Exp 2: F(1, 8) = 0.08), so this difference should not affect the result.
+The original sample was 40 students who "participated voluntarily, were unpaid and had normal reading and writing ability," run in person "in groups of between one and five." My sample was adults living in the US, recruited through Prolific and participating alone and online for pay. The original's students were likely at the authors' UK universities, so the sample here also differs in country and is not limited to students. The number of chains was set by the power simulation. The original also balanced chains by gender, with five female and five male chains. I collected gender but did not balance or model it. Neither experiment found a gender effect (Exp 2: F(1, 8) = 0.08), so this difference should not affect the result.
 
-The task itself moved from a paper booklet to a web application. In the booklet, rereading, copying, and outside help were ruled out physically. The added measures, including an instructions screen with a check that participants understood to read the text once, the minimum reading time, non-selectable text, paste blocking, typing logs, hidden AI instructions, and the honesty and instructed-response items, exist to rule out the same things online. Excluded generations were rerun, which the original never needed. Recalls were also passed on with spacing corrected automatically, which is the closest online equivalent to the original experimenter typing them up. The original does not say how order was counterbalanced, so the balanced Latin square is my own choice.
+The task itself moved from a paper booklet to a web application. In the booklet, rereading, copying, and outside help were ruled out physically. The added measures, including an instructions screen with a check that participants understood to read the text once, the minimum reading time, non-selectable text, paste blocking, typing logs, hidden AI instructions, and the honesty and instructed-response items, exist to rule out the same things online. Excluded generations were rerun, which the original never needed. Recalls were also passed on with spacing corrected automatically, which is the closest online equivalent to the original experimenter typing them up. The original does not say how order was counterbalanced, so the balanced Latin square is a new choice here.
 
-The largest analytic difference is scoring. The original hand coded every recall using Kintsch (1974) propositional analysis: Mesoudi marked each of the 56 propositions present or absent, and also divided each recall into its own propositions to measure recall quantity (personal communication, November 13, 2026). A blind second coder coded three of the ten chains, only to check reliability. I scored with LLMs validated against my hand coding of a subset, which marked the same propositions in the same way, and skipped the quantity measure, because my confirmatory test only uses accuracy. My confirmatory test also differs. I used a permutation test on the social versus non-social contrast, and the original used a mixed ANOVA with planned comparisons. However, I report the original analysis alongside it.
+The largest analytic difference is scoring. The original hand coded every recall using Kintsch (1974) propositional analysis: Mesoudi marked each of the 56 propositions present or absent, and also divided each recall into its own propositions to measure recall quantity (personal communication, November 13, 2026). A blind second coder coded three of the ten chains, only to check reliability. I scored with LLMs validated against hand coding of a subset, which marked the same propositions in the same way, and skipped the quantity measure, because the confirmatory test only uses accuracy. My confirmatory test also differs. I used a permutation test on the social versus non-social contrast, and the original used a mixed ANOVA with planned comparisons. However, I report the original analysis alongside it.
 
 Two of these differences could matter. Online participants may be less attentive, which would lower recall overall. Because every chain contributes both social and non-social scores, lower overall recall should lower both scores together, though it could also shrink the difference between them in absolute terms, or affect some materials more than others. The exploratory comparison of first-generation recall with the original's checks for this. Automated scoring also adds error, which would weaken the effect. This is why the power simulation includes the scoring error of a scorer that agrees with human coding at r = 0.90.
 
@@ -186,166 +195,38 @@ Each recall was stored exactly as typed, and the version passed to the next part
 Responses are loaded from the study app's export, and because the pilot ran on the test chains, only test rows are kept for the pilot and only real rows for the study.
 
 ```{r import-data}
-# The raw data live in the whispers PocketBase on sciminds.cloud (lab
-# login needed). `npm run export` in whispers saves every row to this file
-export_path <- "../new_code/whispers/exports/whispers_responses.json"
-# exports/ is gitignored, so a fresh clone has no export file at all
-responses <- if (file.exists(export_path)) {
-  jsonlite::read_json(export_path, simplifyVector = TRUE)
-} else {
-  list()
-}
-# the export is missing or empty before the pilot, which skips the data
-# chunks below
-has_data <- length(responses) > 0
-
-# TRUE: the pilot (test chains). FALSE: the real study
-pilot <- TRUE
-if (has_data) responses <- filter(responses, test == pilot)
-knitr::kable(tibble(rows = if (has_data) nrow(responses) else 0))
-
-# the hand codes: the coding Google Sheet downloaded as an .xlsx
-# (File > Download > Microsoft Excel) into the same gitignored folder, and
-# the key from coding_sheet.R that links each recall code to its chain.
-# Until the coded sheet is there, the hand-codes chunk below is skipped
-exports <- "../new_code/whispers/exports/"
-which_data <- if (pilot) "pilot" else "study"
-coded_path <- paste0(exports, "coded_", which_data, ".xlsx")
-key_path <- paste0(exports, "coding_key_", which_data, ".csv")
-has_codes <- file.exists(coded_path)
-
-# the frozen Claude scorer's scores, one row per recall and paragraph, which
-# new_code/scoring/score.py saves into the same folder
-scores_path <- paste0(exports, "llm_scores_", which_data, "_claude.csv")
-has_scores <- has_data && file.exists(scores_path)
 ```
+
+#### Sanity checks
 
 ```{r exclusion-rules}
 #| eval: !expr has_data
-# My preregistered exclusion rules, written out as code. The app applied
-# the same rules live (src/lib/server/gate.js in whispers), so this also
-# checks every decision it made
-canary_word <- "erstwhile"  # the word the hidden note asks an AI to use
-min_typed_share <- 0.5      # at least half as many keystrokes as characters
-min_words <- 10             # nearly empty: under 10 words,
-min_word_share <- 0.25      #   and under a quarter of the words it read
-min_overlap <- 0.15         # off topic: under 15% of its long words are in
-                            #   what it read
-
-# a text's 4+ letter words, which skips "the", "and", "was"
-long_words <- function(text) {
-  unique(str_extract_all(tolower(text), "[a-z]{4,}")[[1]])
-}
-
-rules <- responses |>
-  filter(status %in% c("passed", "held", "excluded")) |>
-  mutate(
-    # clear fails: excluded, and the generation runs again
-    canary = str_detect(tolower(recall_raw), canary_word),
-    not_typed = lengths(keystroke_log$large_insertions) > 0 |
-      keystroke_log$keystrokes < min_typed_share * nchar(recall_raw),
-    said_outside_help = outside_help %in% "Yes",
-    # borderline: held until I read the recall
-    near_empty = str_count(recall_raw, "\\S+") < min_words &
-      str_count(recall_raw, "\\S+") <
-        min_word_share * str_count(input_text, "\\S+"),
-    # a recall with no long words has nothing to compare: not off topic
-    off_topic = coalesce(map2_dbl(recall_raw, input_text, \(recall, read)
-      mean(long_words(recall) %in% long_words(read))) < min_overlap, FALSE),
-    failed_instructed = !instructed_passed
-  )
-
-# how many recalls each rule caught
-rules |>
-  summarize(across(canary:failed_instructed, sum)) |>
-  pivot_longer(everything(), names_to = "rule", values_to = "recalls") |>
-  knitr::kable()
-
-# every recall a rule caught, with what the app decided
-rules |>
-  filter(if_any(canary:failed_instructed)) |>
-  select(chain, generation, status, canary:failed_instructed) |>
-  knitr::kable()
 ```
 
 ```{r exclusions}
 #| eval: !expr has_data
-# how many rows ended in each status
-knitr::kable(count(responses, status))
-
-# every exclusion was decided before the next generation read the recall:
-# canary and not_typed at submit, outside_help after the final questions,
-# and review for a held recall (near_empty, off_topic, instructed_response)
-# I excluded after reading it
-excluded <- count(filter(responses, status == "excluded"), exclude_reason)
-if (nrow(excluded) == 0) excluded <- tibble(exclude_reason = "none", n = 0)
-knitr::kable(excluded)
-
-# only accepted recalls go on to scoring
-recalls <- filter(responses, status == "passed")
-
-# held recalls I passed after reading them, by why they were held
-held <- count(tibble(flag = as.character(unlist(recalls$flags))), flag)
-if (nrow(held) == 0) held <- tibble(flag = "none", n = 0)
-knitr::kable(held)
 ```
 
 ```{r reading-times}
 #| eval: !expr has_data
-# seconds each accepted participant spent reading the text and writing
-# their recall: the median, the fastest and the slowest. Nobody is
-# trimmed, since the read screen already sets a minimum reading time
-recalls |>
-  select(reading = read_ms, writing = recall_ms) |>
-  pivot_longer(everything(), names_to = "screen", values_to = "ms") |>
-  group_by(screen) |>
-  summarize(median = median(ms) / 1000,
-            min = min(ms) / 1000,
-            max = max(ms) / 1000) |>
-  knitr::kable(digits = 1)
+```
+
+```{r words-per-generation}
+#| eval: !expr has_data
+#| fig-cap: "Recall length in words at each generation, one line per chain. Generation 0 is the original paragraphs (237 words)."
+```
+
+```{r reading-pace}
+#| eval: !expr has_data
+#| fig-cap: "Each participant's reading speed on the read screen. The dashed line is the fastest the screen allows, and the solid line and band are the average adult rate and where most adults read (Brysbaert, 2019)."
 ```
 
 ```{r complete-chains}
 #| eval: !expr has_data
-# only chains with all four generations accepted are analyzed. The app
-# allows one accepted recall per chain and generation, so four rows
-# means all four
-complete <- count(recalls, chain) |> filter(n == 4)
-recalls <- filter(recalls, chain %in% complete$chain)
-knitr::kable(tibble(complete_chains = nrow(complete)))
 ```
 
 ```{r hand-codes}
 #| eval: !expr has_codes
-# the rubric tab turns each column header back into its material. The
-# material is only written on each block's first row, so it's filled down
-rubric <- readxl::read_excel(coded_path, "rubric") |> fill(material)
-key <- read_csv(key_path, show_col_types = FALSE)
-
-# every tab except the rubric is one coder: one row per recall, one column
-# per proposition, 1 if present and blank if not
-coders <- setdiff(readxl::excel_sheets(coded_path), "rubric")
-hand_codes <- map(coders, \(coder) {
-  mutate(readxl::read_excel(coded_path, coder), coder = coder)
-}) |>
-  list_rbind()
-
-# each coder's score per recall and paragraph: how many of its 14
-# propositions were marked present, with the recall's chain and generation
-hand_scores <- hand_codes |>
-  pivot_longer(any_of(rubric$point),
-               names_to = "point", values_to = "present") |>
-  left_join(select(rubric, point, material), by = "point") |>
-  summarize(score = sum(present == 1, na.rm = TRUE),
-            .by = c(coder, recall, material)) |>
-  # skip tabs nobody has coded yet, since blank cells would count as zeros
-  filter(sum(score) > 0, .by = coder) |>
-  left_join(select(key, recall, chain, generation), by = "recall")
-
-hand_scores |>
-  pivot_wider(names_from = material, values_from = score) |>
-  arrange(coder, recall) |>
-  knitr::kable()
 ```
 
 ```{r include=F}
@@ -358,7 +239,19 @@ Mesoudi et al. (2006) conclude that "human cultural transmission is biased towar
 
 I tested the claim in one step, using each chain's social minus non-social difference and the two-sided sign-flip permutation test described in the Power Analysis, with 5,000 flips at $\alpha$ = 0.05. The test assumes only that, with no effect, each chain's difference is symmetric around zero, so it does not depend on normality, which 20 chains are too few to check. Because it is a single comparison of two things, social and non-social, it needs no sphericity correction and no correction for multiple comparisons. The original's $\alpha$ of 0.01 was the 0.05 split across five comparisons.
 
-If the average difference is positive and the test is significant, the effect replicates. Additionally, I report the original ANOVA and pairwise comparisons alongside it, so my results can be compared directly with the original's, and I plot correct recall by generation and material next to the original's Figure 4.
+If the average difference is positive and the test is significant, the effect replicates. Additionally, I report the original ANOVA and pairwise comparisons alongside it, so the results can be compared directly with the original's, and I plot correct recall by generation and material next to the original's Figure 4.
+
+```{r mesoudi-figure-4}
+#| fig-cap: "Mesoudi et al.'s (2006) Figure 4, recreated from their published Experiment 2 data: the proportion of each paragraph's propositions recalled correctly, by generation. Error bars show standard errors across the 10 chains."
+#| fig-width: 6
+#| fig-height: 3.8
+```
+
+```{r improved-figure-4}
+#| fig-cap: "The same data as Figure 3, in propositions recalled out of 14, with the social materials in blue and red and the non-social in black and grey. Error bars show one standard error across the 10 chains."
+#| fig-width: 6
+#| fig-height: 3.8
+```
 
 #### Confirmatory test on pilot data
 
