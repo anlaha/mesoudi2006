@@ -69,20 +69,26 @@ tibble(Pair = c("Gossip vs individual", "Gossip vs physical",
                                "scorer, each a sign-flip test at alpha = 0.01."))
 
 ## ---- recall-by-gn ----
-# propositions recalled from each material at each generation, with the
-# primary scorer. Each material gets its own color and shape, so they stay
-# apart without color too. Social materials are in color (blue, red),
-# non-social in black and grey
+# propositions recalled from each material at each generation, in the
+# original (Mesoudi's Figure 4, redrawn) next to this study with the primary
+# scorer. Each material gets its own color and shape, so they stay apart
+# without color too. Social materials are in color (blue, red), non-social in
+# black and grey
 material_colors <- c(Gossip = "#1565C0", Social = "#C62828",
                      Individual = "black", Physical = "#9E9E9E")
 # nudges the four materials apart at each generation so the error bars don't overlap
 dodge <- position_dodge(width = 0.15)
 
-ggplot(summarize_materials(scorer_scores$Claude),
-       aes(x = generation, y = mean, color = material, shape = material)) +
+by_material <- bind_rows(
+  mutate(mesoudi, study = "Original (10 chains)"),
+  mutate(scorer_scores$Claude, study = "Replication (20 chains)")) |>
+  summarize_materials(by = c("study", "generation"))
+
+ggplot(by_material, aes(x = generation, y = mean, color = material, shape = material)) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1, position = dodge) +
   geom_line(position = dodge) +
   geom_point(size = 2, position = dodge) +
+  facet_wrap(~study) +
   scale_color_manual(values = material_colors, name = "Material") +
   # filled shapes, since the default plus is hard to see
   scale_shape_manual(values = c(16, 17, 15, 18), name = "Material") +

@@ -278,9 +278,9 @@ The planned test on the 20 complete chains, scored by the frozen Claude scorer, 
 
 ```{r recall-by-gn}
 #| eval: !expr has_scores
-#| fig-cap: "Propositions recalled out of 14 from each material at each generation, scored by the Claude scorer, with the social materials in blue and red and the non-social in black and grey. Error bars show one standard error across the 20 chains."
-#| fig-width: 6
-#| fig-height: 3.8
+#| fig-cap: "Propositions recalled out of 14 from each material at each generation, in the original (Mesoudi et al.'s Figure 4, redrawn from their published data) and in this replication (Claude scorer). The social materials are in blue and red and the non-social in black and grey. Error bars show one standard error across chains."
+#| fig-width: 7
+#| fig-height: 3.5
 ```
 
 ```{r social-vs-nonsocial}
