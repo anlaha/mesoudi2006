@@ -68,5 +68,8 @@ rsconnect/
 # recalls Mesoudi shared privately; keep out of the public repo until he says otherwise
 original_code/mesoudi_supplements/
 
+# raw data, coding sheets, hand codes and scorer logs; data/ holds the anonymized copies
+data/private/
+
 # API keys
 .env

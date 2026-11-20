@@ -16,6 +16,7 @@ import os
 import random
 import statistics
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from string import Template
 import urllib.request
 
@@ -24,34 +25,39 @@ import openpyxl
 
 # Which recalls to score: "pilot" (compared with the hand codes), "mesoudi" (compared with his scores)
 # or "study" (the main study's real chains, compared with the hand-coded third once it exists)
-SOURCE = "pilot"
+SOURCE = "study"
 # Which model scores: "claude" (3 runs, majority vote) or "gemma" (1 run on this Mac through ollama)
 SCORER = "claude"
 
+# Every path starts from this file's folder, so the script runs from anywhere
+HERE = Path(__file__).resolve().parent
+# Participant text, hand codes and run logs stay in the repo's gitignored data/private/
+PRIVATE = HERE.parent.parent / "data" / "private"
+
 # The rubric, shared with coding_sheet.R so the human and model coding read the same propositions
-RUBRIC_PATH = "propositions.csv"
-PROMPT_PATH = "prompt.txt"
+RUBRIC_PATH = HERE / "propositions.csv"
+PROMPT_PATH = HERE / "prompt.txt"
 
 # The pilot recalls and the key that names them R01, R02, ...
-EXPORT_PATH = "../whispers/exports/whispers_responses.json"
-KEY_PATH = "../whispers/exports/coding_key_pilot.csv"
+EXPORT_PATH = PRIVATE / "whispers_responses.json"
+KEY_PATH = PRIVATE / "coding_key_pilot.csv"
 # Each finished run is added here as one line, so runs already paid for aren't lost if the script stops.
-# One log per source, in the gitignored exports folder because the quotes are participant text
-RUNS_PATH = f"../whispers/exports/llm_runs_{SOURCE}_{SCORER}.jsonl"
+# One log per source, in the private folder because the quotes are participant text
+RUNS_PATH = PRIVATE / f"llm_runs_{SOURCE}_{SCORER}.jsonl"
 # The final scores, one row per recall and paragraph, which the report reads
-SCORES_PATH = f"../whispers/exports/llm_scores_{SOURCE}_{SCORER}.csv"
+SCORES_PATH = PRIVATE / f"llm_scores_{SOURCE}_{SCORER}.csv"
 # The hand codes: the coding Google Sheet downloaded as .xlsx, and the tab to compare against
-CODED_PATH = "../whispers/exports/coded_pilot.xlsx"
+CODED_PATH = PRIVATE / "coded_pilot.xlsx"
 # The main study's hand-coded third: its coding sheet downloaded as .xlsx, and the key from coding_sheet.R
-STUDY_CODED_PATH = "../whispers/exports/coded_study.xlsx"
-STUDY_KEY_PATH = "../whispers/exports/coding_key_study.csv"
+STUDY_CODED_PATH = PRIVATE / "coded_study.xlsx"
+STUDY_KEY_PATH = PRIVATE / "coding_key_study.csv"
 CODER_TAB = "Justin"
 
 # Mesoudi's 40 Experiment 2 recalls, which he shared privately (gitignored folder). The .txt was
 # made from his Word file with: textutil -convert txt all_results_gossip4.doc
-MESOUDI_RECALLS_PATH = "../../original_code/mesoudi_supplements/all_results_gossip4.txt"
+MESOUDI_RECALLS_PATH = HERE.parent.parent / "original_code" / "mesoudi_supplements" / "all_results_gossip4.txt"
 # His published scores for them, from his public GitHub repo
-MESOUDI_SCORES_PATH = "../../original_code/mesoudi_whiten_dunbar_2006/mesoudi2006_exp2_data.csv"
+MESOUDI_SCORES_PATH = HERE.parent.parent / "original_code" / "mesoudi_whiten_dunbar_2006" / "mesoudi2006_exp2_data.csv"
 
 # The model and settings from the prereg. The SDK is kept below 2.0 because 2.0
 # switches to the API version that rejects temperature, and the prereg says temperature 0
@@ -250,8 +256,8 @@ def load_hand_codes(path, tab, rubric):
     codes = {}
     for values in rows:
         cells = dict(zip(header, values))
-        if not cells["recall"]:
-            continue  # formatted but empty rows below the last recall
+        if not cells.get("recall"):
+            continue  # empty rows below the last recall, which a Google Sheets download adds
         codes[cells["recall"]] = {id_for_point[point]: cells[point] == 1 for point in id_for_point}
     return codes
 

@@ -1,6 +1,6 @@
 # Makes the blind hand-coding workbook from the whispers export.
-#   Rscript coding_sheet.R          (run from new_code/, after npm run export in whispers)
-# Writes two files next to the export (_study instead of _pilot for the real study), which is gitignored because it holds participant text:
+#   Rscript coding_sheet.R          (after npm run export in whispers, saved to data/private/)
+# Writes two files next to the export in data/private/ (_study instead of _pilot for the real study), gitignored because they hold participant text:
 #   coding_sheet_pilot.xlsx  a rubric tab, then one tab per coder: shuffled recalls, no chain or generation
 #   coding_key_pilot.csv     what links each recall code back to its chain and generation. Coders never see it
 # Each coder tab has one row per recall and one column per point of the original, with the point
@@ -10,12 +10,14 @@
 library(tidyverse)
 
 # TRUE: the pilot (test link). FALSE: the real study
-pilot <- TRUE
+pilot <- FALSE
 coders <- c("Justin", "temp")
-export_path <- "whispers/exports/whispers_responses.json"
+# here() builds each path from the repo's top folder
+private <- here::here("data", "private")
+export_path <- file.path(private, "whispers_responses.json")
 # the pilot and the study each get their own sheet and key, so their codes never mix
-sheet_path <- paste0("whispers/exports/coding_sheet_", if (pilot) "pilot" else "study", ".xlsx")
-key_path <- paste0("whispers/exports/coding_key_", if (pilot) "pilot" else "study", ".csv")
+sheet_path <- file.path(private, paste0("coding_sheet_", if (pilot) "pilot" else "study", ".xlsx"))
+key_path <- file.path(private, paste0("coding_key_", if (pilot) "pilot" else "study", ".csv"))
 set.seed(1974) # the same shuffle every time, after Kintsch (1974)
 
 # Mesoudi's four paragraphs, from study2_material.pdf
@@ -28,7 +30,7 @@ paragraphs <- c(
 
 # Mesoudi's 56 propositions, 14 per material, each with the plain-language point coders see.
 # Kept in scoring/propositions.csv so this sheet and the LLM scorer read the same list
-propositions <- read_csv("scoring/propositions.csv", show_col_types = FALSE)
+propositions <- read_csv(here::here("new_code", "scoring", "propositions.csv"), show_col_types = FALSE)
 
 # accepted recalls. Ones already in the key keep their code, so a rerun never
 # changes what R01 means once someone is coding. New ones are shuffled and
