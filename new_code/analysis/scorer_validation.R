@@ -40,6 +40,18 @@ validation |>
                                "chains, with the preregistered bars for when no",
                                "second human coder is available."))
 
+## ---- social-minus-nonsocial-by-scorer ----
+# the planned test's number for every chain, from each scorer. Points on the
+# dashed line are chains the two scorers agree on exactly
+by_scorer <- inner_join(select(scorers$Claude, chain, Claude = difference),
+                        select(scorers$Gemma, chain, Gemma = difference), by = "chain")
+
+ggplot(by_scorer, aes(x = Claude, y = Gemma)) +
+  geom_abline(linetype = "dashed", color = "grey50") +
+  geom_point(color = "#1565C0", alpha = 0.7, size = 2) +
+  coord_equal() +
+  labs(x = "Claude - social minus non-social", y = "Gemma - social minus non-social")
+
 ## ---- scorer-validation ----
 # the same paragraphs as a scatter. Points on the dashed line are exact agreement
 ggplot(validation, aes(x = score_hand, y = score_model)) +
@@ -49,4 +61,4 @@ ggplot(validation, aes(x = score_hand, y = score_model)) +
              position = position_jitter(width = 0.15, height = 0.15, seed = 1)) +
   facet_wrap(~scorer) +
   coord_equal() +
-  labs(x = "Hand-coded score (of 14)", y = "Model score (of 14)")
+  labs(x = "Hand-coded score", y = "Model score")

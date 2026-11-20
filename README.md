@@ -13,7 +13,6 @@ mesoudi2006/
 ├── new_code/
 │   ├── analysis/
 │   │   ├── data_prep.R           loads data, exclusion rules, sanity checks, asserts
-│   │   ├── mesoudi_figure_4.R    recreates and improves Figure 4 from Experiment 2 of Mesoudi et al. 2006
 │   │   ├── confirmatory.R        planned test (H1), the four pairs (H2), and their figures
 │   │   ├── scorer_validation.R   LLM scorers checked against the hand codes
 │   │   ├── exploratory.R         reading position and first-generation analyses

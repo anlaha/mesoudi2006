@@ -73,6 +73,8 @@ pilot <- FALSE
 figure_set <- if (pilot) "pilot" else "main"
 figure_number <- 0
 knitr::opts_hooks$set(fig.cap = function(options) {
+  # a chunk that doesn't run makes no figure, so it takes no number
+  if (isFALSE(options$eval)) return(options)
   figure_number <<- figure_number + 1
   options$fig.path <- paste0("figures/", figure_set, "/fig", figure_number, "-", figure_set, "-")
   options
@@ -86,7 +88,6 @@ knitr::opts_chunk$set(fig.process = function(path) {
 
 knitr::read_chunk(here::here("new_code", "power", "power_sim.R"))
 knitr::read_chunk(here::here("new_code", "analysis", "data_prep.R"))
-knitr::read_chunk(here::here("new_code", "analysis", "mesoudi_figure_4.R"))
 knitr::read_chunk(here::here("new_code", "analysis", "confirmatory.R"))
 knitr::read_chunk(here::here("new_code", "analysis", "scorer_validation.R"))
 knitr::read_chunk(here::here("new_code", "analysis", "exploratory.R"))
@@ -267,18 +268,6 @@ I tested the claim in one step, using each chain's social minus non-social diffe
 
 If the average difference is positive and the test is significant, the effect replicates. Additionally, I report the original ANOVA and pairwise comparisons alongside it, so the results can be compared directly with the original's, and I plot correct recall by generation and material next to the original's Figure 4.
 
-```{r mesoudi-figure-4}
-#| fig-cap: "Mesoudi et al.'s (2006) Figure 4, recreated from their published Experiment 2 data: the proportion of each paragraph's propositions recalled correctly, by generation. Error bars show standard errors across the 10 chains."
-#| fig-width: 6
-#| fig-height: 3.8
-```
-
-```{r improved-figure-4}
-#| fig-cap: "The same data as Figure 4, in propositions recalled out of 14, with the social materials in blue and red and the non-social in black and grey. Error bars show one standard error across the 10 chains."
-#| fig-width: 6
-#| fig-height: 3.8
-```
-
 #### Confirmatory test
 
 The planned test on the 20 complete chains, scored by the frozen Claude scorer, with the frozen Gemma scorer as a sensitivity check.
@@ -287,17 +276,17 @@ The planned test on the 20 complete chains, scored by the frozen Claude scorer, 
 #| eval: !expr has_scores
 ```
 
-```{r results-by-generation}
+```{r recall-by-gn}
 #| eval: !expr has_scores
-#| fig-cap: "The replication drawn like Figure 5: propositions recalled out of 14 by generation, scored by the Claude scorer. Error bars show one standard error across the 20 chains."
+#| fig-cap: "Propositions recalled out of 14 from each material at each generation, scored by the Claude scorer, with the social materials in blue and red and the non-social in black and grey. Error bars show one standard error across the 20 chains."
 #| fig-width: 6
 #| fig-height: 3.8
 ```
 
-```{r chain-differences}
+```{r social-vs-nonsocial}
 #| eval: !expr has_scores
-#| fig-cap: "Each chain's social minus non-social difference, the number the planned test uses, for Mesoudi's 10 chains and this study's 20 with each scorer. Black points and lines show the mean and one standard error, and the dashed line is no difference."
-#| fig-width: 6
+#| fig-cap: "Propositions recalled per social paragraph (gossip and social) and per non-social paragraph (individual and physical) at each generation, in the original and in this replication (Claude scorer). The gap between the lines is what the planned test measures. Error bars show one standard error across chains."
+#| fig-width: 7
 #| fig-height: 3.5
 ```
 
@@ -305,6 +294,13 @@ The planned test on the 20 complete chains, scored by the frozen Claude scorer, 
 
 ```{r scorer-validation-table}
 #| eval: !expr has_scores && has_codes
+```
+
+```{r social-minus-nonsocial-by-scorer}
+#| eval: !expr has_scores && file.exists(gemma_path)
+#| fig-cap: "Each chain's propositions recalled, social minus non-social, from the Claude and Gemma scorers. Points on the dashed line are chains the two scorers agree on exactly."
+#| fig-width: 6
+#| fig-height: 3.5
 ```
 
 ```{r scorer-validation}
@@ -343,14 +339,14 @@ The estimate is `r round(mean(study_differences), 2)` propositions against a bui
 
 I will run two exploratory analyses. First, I will test whether a paragraph's position in the original reading order affects how much of it survives, which the balanced Latin square separates from material. Second, I will compare first-generation recall in each material with the original's, to see how recall in an online sample compares with the in-person original.
 
-```{r reading-position}
+```{r recall-by-reading-pos}
 #| eval: !expr has_scores
 #| fig-cap: "Propositions recalled by the paragraph's position in the reading order, scored by the Claude scorer. Bars show the mean with one standard error, and each point is one chain."
 #| fig-width: 6
 #| fig-height: 3.5
 ```
 
-```{r first-generation}
+```{r g1-recall}
 #| eval: !expr has_scores
 #| fig-cap: "First-generation recall of each material, in the original and in this replication (Claude scorer). Error bars show one standard error."
 #| fig-width: 6

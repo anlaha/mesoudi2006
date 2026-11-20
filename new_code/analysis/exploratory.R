@@ -2,9 +2,10 @@
 # (2006) Experiment 2 replication: whether a paragraph's position in the
 # reading order affects how much of it survives, and how first-generation
 # recall compares with the original's. The report runs this code live using
-# the "## ---- label ----" markers, after confirmatory.R has read the scores.
+# the "## ---- label ----" markers, after confirmatory.R has read the scores
+# and defined summarize_materials().
 
-## ---- reading-position ----
+## ---- recall-by-reading-pos ----
 # which material each chain read in each position, from the app's four
 # orders (whispers src/lib/materials.js). Each order is one row of a
 # balanced Latin square
@@ -28,9 +29,9 @@ ggplot(by_position, aes(x = position, y = score)) +
   stat_summary(fun.data = mean_se, geom = "linerange", linewidth = 1, color = "grey25") +
   geom_point(color = "#1565C0", alpha = 0.6,
              position = position_jitter(width = 0.15, height = 0, seed = 1)) +
-  labs(x = "Position in the reading order", y = "Propositions recalled (of 14)")
+  labs(x = "Position in the reading order", y = "Propositions recalled")
 
-## ---- first-generation ----
+## ---- g1-recall ----
 # first-generation recall of each material, here and in the original
 first_generation <- bind_rows(
   mutate(filter(mesoudi, generation == 1), source = "Mesoudi (2006)"),
@@ -42,4 +43,4 @@ ggplot(first_generation, aes(x = material, y = mean, fill = source)) +
   geom_linerange(aes(ymin = mean - se, ymax = mean + se), linewidth = 1,
                  color = "grey25", position = position_dodge(width = 0.7)) +
   scale_fill_manual(values = c("grey70", "#C3DDF0"), name = NULL) +
-  labs(x = NULL, y = "Propositions recalled\nat generation 1 (of 14)")
+  labs(x = NULL, y = "Propositions recalled\nat generation 1")
