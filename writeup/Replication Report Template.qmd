@@ -65,9 +65,31 @@ All of the code in this section is in `new_code/power/power_sim.R` and runs live
 
 ```{r read-script}
 #| include: false
-knitr::read_chunk("../new_code/power/power_sim.R")
-knitr::read_chunk("../new_code/analysis/data_prep.R")
-knitr::read_chunk("../new_code/analysis/mesoudi_figure_4.R")
+# TRUE: render the pilot (test chains). FALSE: the main study
+pilot <- FALSE
+
+# each captioned figure is saved as figures/<set>/fig<number>-<set>-<chunk name>.png,
+# numbered in the order the report numbers them
+figure_set <- if (pilot) "pilot" else "main"
+figure_number <- 0
+knitr::opts_hooks$set(fig.cap = function(options) {
+  figure_number <<- figure_number + 1
+  options$fig.path <- paste0("figures/", figure_set, "/fig", figure_number, "-", figure_set, "-")
+  options
+})
+# knitr ends every file name in "-1", the figure's number within its chunk, which is always 1 here
+knitr::opts_chunk$set(fig.process = function(path) {
+  new_path <- sub("-1\\.png$", ".png", path)
+  file.rename(path, new_path)
+  new_path
+})
+
+knitr::read_chunk(here::here("new_code", "power", "power_sim.R"))
+knitr::read_chunk(here::here("new_code", "analysis", "data_prep.R"))
+knitr::read_chunk(here::here("new_code", "analysis", "mesoudi_figure_4.R"))
+knitr::read_chunk(here::here("new_code", "analysis", "confirmatory.R"))
+knitr::read_chunk(here::here("new_code", "analysis", "scorer_validation.R"))
+knitr::read_chunk(here::here("new_code", "analysis", "exploratory.R"))
 ```
 
 ```{r setup}
@@ -116,11 +138,10 @@ As a check, I ran the same simulation with no effect at all. Each test should th
 ```
 
 ```{r power-curve}
+#| fig-cap: "Each panel is one test, and the first panel is the planned test. Each line is one true effect size, with darker lines for bigger effects, and the dashed line marks 80% power."
 #| fig-width: 9
 #| fig-height: 3.5
 ```
-
-Each panel is one test, and the first panel is the planned test. Each line is one true effect size, with darker lines for bigger effects, and the dashed line marks 80% power.
 
 The table below gives the smallest number of chains that reaches 80%, 90%, and 95% power, and the power at 20 chains.
 
@@ -213,7 +234,7 @@ Responses are loaded from the study app's export, and because the pilot ran on t
 
 ```{r words-per-generation}
 #| eval: !expr has_data
-#| fig-cap: "Recall length in words at each generation, one line per chain. Generation 0 is the original paragraphs (237 words)."
+#| fig-cap: "Recall length in words at each generation. Bars show the mean with one standard error, and each point is one recall. Generation 0 is the original paragraphs (237 words)."
 ```
 
 ```{r reading-pace}
@@ -253,39 +274,44 @@ If the average difference is positive and the test is significant, the effect re
 ```
 
 ```{r improved-figure-4}
-#| fig-cap: "The same data as Figure 3, in propositions recalled out of 14, with the social materials in blue and red and the non-social in black and grey. Error bars show one standard error across the 10 chains."
+#| fig-cap: "The same data as Figure 4, in propositions recalled out of 14, with the social materials in blue and red and the non-social in black and grey. Error bars show one standard error across the 10 chains."
 #| fig-width: 6
 #| fig-height: 3.8
 ```
 
-#### Confirmatory test on pilot data
+#### Confirmatory test
 
-The same test on the pilot chains, scored by the frozen Claude scorer. Only chains with all four generations count, so the pilot shows that the code runs on real recalls, and says nothing about the effect.
+The planned test on the 20 complete chains, scored by the frozen Claude scorer, with the frozen Gemma scorer as a sensitivity check.
 
-```{r confirmatory-pilot}
+```{r confirmatory-test}
 #| eval: !expr has_scores
-# the pilot's recall codes (R01, R02, ...) are matched to their chain and
-# generation through the coding key. The main study's codes (C03G2) say both
-llm_scores <- read_csv(scores_path, show_col_types = FALSE)
-if (pilot) {
-  key <- read_csv(key_path, show_col_types = FALSE)
-  llm_scores <- left_join(llm_scores, key, by = "recall")
-} else {
-  llm_scores <- mutate(llm_scores,
-                       chain = as.integer(substr(recall, 2, 3)),
-                       generation = as.integer(substr(recall, 5, 5)))
-}
-complete_scores <- filter(llm_scores, chain %in% complete$chain)
-pilot_differences <- chain_difference(complete_scores)
+```
 
-pilot_differences |>
-  select(chain, gossip, social, individual, physical, difference) |>
-  knitr::kable(digits = 2)
+```{r results-by-generation}
+#| eval: !expr has_scores
+#| fig-cap: "The replication drawn like Figure 5: propositions recalled out of 14 by generation, scored by the Claude scorer. Error bars show one standard error across the 20 chains."
+#| fig-width: 6
+#| fig-height: 3.8
+```
 
-tibble(chains = nrow(pilot_differences),
-       mean_difference = mean(pilot_differences$difference),
-       p = sign_flip_p(pilot_differences$difference)) |>
-  knitr::kable(digits = 3)
+```{r chain-differences}
+#| eval: !expr has_scores
+#| fig-cap: "Each chain's social minus non-social difference, the number the planned test uses, for Mesoudi's 10 chains and this study's 20 with each scorer. Black points and lines show the mean and one standard error, and the dashed line is no difference."
+#| fig-width: 6
+#| fig-height: 3.5
+```
+
+#### Scorer validation
+
+```{r scorer-validation-table}
+#| eval: !expr has_scores && has_codes
+```
+
+```{r scorer-validation}
+#| eval: !expr has_scores && has_codes
+#| fig-cap: "Each hand-coded paragraph's score from the hand codes and from each model scorer. Points on the dashed line are exact agreement."
+#| fig-width: 6
+#| fig-height: 3.5
 ```
 
 #### Confirmatory test on simulated data
@@ -316,6 +342,20 @@ The estimate is `r round(mean(study_differences), 2)` propositions against a bui
 ### Exploratory analyses
 
 I will run two exploratory analyses. First, I will test whether a paragraph's position in the original reading order affects how much of it survives, which the balanced Latin square separates from material. Second, I will compare first-generation recall in each material with the original's, to see how recall in an online sample compares with the in-person original.
+
+```{r reading-position}
+#| eval: !expr has_scores
+#| fig-cap: "Propositions recalled by the paragraph's position in the reading order, scored by the Claude scorer. Bars show the mean with one standard error, and each point is one chain."
+#| fig-width: 6
+#| fig-height: 3.5
+```
+
+```{r first-generation}
+#| eval: !expr has_scores
+#| fig-cap: "First-generation recall of each material, in the original and in this replication (Claude scorer). Error bars show one standard error."
+#| fig-width: 6
+#| fig-height: 3.5
+```
 
 ## Discussion
 

@@ -5,35 +5,34 @@
 
 ## ---- import-data ----
 # The raw data live in the whispers PocketBase on sciminds.cloud (lab
-# login needed). `npm run export` in whispers saves every row to this file
-export_path <- "../new_code/whispers/exports/whispers_responses.json"
-# exports/ is gitignored, so a fresh clone has no export file at all
-responses <- if (file.exists(export_path)) {
-  jsonlite::read_json(export_path, simplifyVector = TRUE)
+# login needed). new_code/analysis/make_anon_data.R writes the anonymized
+# copies in data/ that everything below reads. here() builds each path
+# from the repo's top folder, so it works wherever the code is run from
+responses_path <- here::here("data", "responses-anon.csv")
+responses <- if (file.exists(responses_path)) {
+  read_csv(responses_path, show_col_types = FALSE)
 } else {
-  list()
+  tibble()
 }
-# the export is missing or empty before the pilot, which skips the data
-# chunks below
-has_data <- length(responses) > 0
+# with no data file yet, the data chunks below are skipped
+has_data <- nrow(responses) > 0
 
-# TRUE: the pilot (test chains). FALSE: the real study
-pilot <- TRUE
+# the pilot's test rows or the main study's real rows, by the `pilot` switch
+# at the top of the report
 if (has_data) responses <- filter(responses, test == pilot)
 
-# the hand codes: the coding Google Sheet downloaded as an .xlsx
-# (File > Download > Microsoft Excel) into the same gitignored folder, and
-# the key from coding_sheet.R that links each recall code to its chain.
-# Until the coded sheet is there, the hand-codes chunk below is skipped
-exports <- "../new_code/whispers/exports/"
+# the hand codes (the coding Google Sheet, downloaded as an .xlsx) and the
+# key from coding_sheet.R that links each recall code to its chain. Until
+# the coded sheet is there, the hand-codes chunk below is skipped
 which_data <- if (pilot) "pilot" else "study"
-coded_path <- paste0(exports, "coded_", which_data, ".xlsx")
-key_path <- paste0(exports, "coding_key_", which_data, ".csv")
+coded_path <- here::here("data", paste0("coded_", which_data, "-anon.xlsx"))
+key_path <- here::here("data", paste0("coding_key_", which_data, "-anon.csv"))
 has_codes <- file.exists(coded_path)
 
-# the frozen Claude scorer's scores, one row per recall and paragraph, which
-# new_code/scoring/score.py saves into the same folder
-scores_path <- paste0(exports, "llm_scores_", which_data, "_claude.csv")
+# the frozen scorers' scores, one row per recall and paragraph, from
+# new_code/scoring/score.py: Claude, the primary, and Gemma, the sensitivity check
+scores_path <- here::here("data", paste0("llm_scores_", which_data, "_claude-anon.csv"))
+gemma_path <- here::here("data", paste0("llm_scores_", which_data, "_gemma-anon.csv"))
 has_scores <- has_data && file.exists(scores_path)
 
 ## ---- exclusion-rules ----
@@ -57,8 +56,8 @@ rules <- responses |>
   mutate(
     # clear fails: excluded, and the generation runs again
     canary = str_detect(tolower(recall_raw), canary_word),
-    not_typed = lengths(keystroke_log$large_insertions) > 0 |
-      keystroke_log$keystrokes < min_typed_share * nchar(recall_raw),
+    not_typed = large_insertions > 0 |
+      keystrokes < min_typed_share * nchar(recall_raw),
     said_outside_help = outside_help %in% "Yes",
     # borderline: held until the recall is read
     near_empty = str_count(recall_raw, "\\S+") < min_words &
@@ -81,9 +80,14 @@ rules |>
 
 # every recall a rule caught, with what the app decided, only if any were
 caught <- rules |>
-  filter(if_any(canary:failed_instructed)) |>
-  select(chain, generation, status, canary:failed_instructed)
-if (nrow(caught) > 0) knitr::kable(caught)
+  pivot_longer(canary:failed_instructed, names_to = "rule", values_to = "caught") |>
+  filter(caught) |>
+  summarize(rules = paste(rule, collapse = ", "), .by = c(chain, generation, status))
+if (nrow(caught) > 0) {
+  knitr::kable(caught, format = "latex", booktabs = TRUE, centering = FALSE,
+               col.names = c("Chain", "Generation", "Outcome", "Caught by"),
+               caption = "Each recall a rule caught, and what happened to it.")
+}
 
 ## ---- exclusions ----
 # what happened to each recall, in one table. Every exclusion was decided
@@ -94,9 +98,10 @@ if (nrow(caught) > 0) knitr::kable(caught)
 responses |>
   mutate(outcome = case_when(
     status == "excluded" ~ paste("excluded:", exclude_reason),
-    status == "passed" & lengths(flags) > 0 ~
-      paste("passed after review:", map_chr(flags, \(f) paste(f, collapse = ", "))),
+    status == "passed" & !is.na(flags) ~
+      paste("passed after review:", str_replace_all(flags, ";", ", ")),
     status == "abandoned" ~ "left or timed out",
+    status == "no_slot" ~ "arrived with no open slot",
     .default = status
   )) |>
   count(outcome, name = "recalls") |>
@@ -119,8 +124,10 @@ recalls |>
     "Seconds each participant spent writing their recall.")
 
 ## ---- words-per-generation ----
-# recall length in words across generations, one line per chain, to check
-# that each chain shrinks the story. The originals are generation 0
+# recall length in words at each generation, to check that the chains shrink
+# the story: a bar for each generation's mean with its standard error, and a
+# point for each recall.
+# The originals are generation 0
 recall_lengths <- recalls |>
   mutate(words = str_count(recall_raw, "\\S+")) |>
   select(chain, generation, words)
@@ -135,9 +142,14 @@ chain_lengths <- bind_rows(originals, recall_lengths)
 # one shade of blue per chain, from light to dark, however many chains
 chain_blues <- colorRampPalette(c("#58A6D6", "#0B1F45"))(n_distinct(chain_lengths$chain))
 
-ggplot(chain_lengths, aes(x = generation, y = words, color = factor(chain))) +
-  geom_line() +
-  geom_point() +
+ggplot(chain_lengths, aes(x = generation, y = words)) +
+  stat_summary(fun = mean, geom = "col", fill = "#C3DDF0", width = 0.6) +
+  # one standard error of the mean, across recalls
+  stat_summary(fun.data = mean_se, geom = "linerange", linewidth = 1, color = "grey25") +
+  # see-through points so the error bars show behind them, and a fixed seed
+  # so the points land in the same place every render
+  geom_point(aes(color = factor(chain)), alpha = 0.6,
+             position = position_jitter(width = 0.15, height = 0, seed = 1)) +
   scale_color_manual(values = chain_blues, guide = "none") +
   labs(x = "Generation (0 = original)", y = "Recall length (words)")
 
@@ -146,6 +158,9 @@ ggplot(chain_lengths, aes(x = generation, y = words, color = factor(chain))) +
 # dashed line is the read screen's minimum time, and the band and solid line
 # are where most adults and the average adult read (Brysbaert, 2019)
 reading <- recalls |>
+  # a read_ms of 0 means the read screen's data never got saved (one
+  # participant), not that they read instantly, so their speed is unknown
+  filter(read_ms > 0) |>
   mutate(words_read = str_count(input_text, "\\S+"),
          wpm = words_read / (read_ms / 60000)) |>
   select(chain, generation, words_read, wpm)
@@ -184,14 +199,12 @@ recalls <- filter(recalls, chain %in% complete$chain)
 
 ## ---- asserts ----
 # rules the prepared data must follow. If one breaks, the render stops
-library(assertthat)
-
-assert_that(all(responses$test == pilot),
+assertthat::assert_that(all(responses$test == pilot),
             msg = "the data mix test rows and real rows")
 
 generations <- recalls |>
   summarize(gens = paste(sort(generation), collapse = ""), .by = chain)
-assert_that(all(generations$gens == "1234"),
+assertthat::assert_that(all(generations$gens == "1234"),
             msg = "a complete chain doesn't have exactly generations 1 to 4")
 
 # each recall next to the one its chain passed on just before it
@@ -199,7 +212,7 @@ handoffs <- recalls |>
   arrange(chain, generation) |>
   mutate(passed_on = lag(recall_passed), .by = chain) |>
   filter(generation > 1)
-assert_that(all(handoffs$input_text == handoffs$passed_on),
+assertthat::assert_that(all(handoffs$input_text == handoffs$passed_on),
             msg = "a generation didn't read what the one before it passed on")
 
 ## ---- hand-codes ----
