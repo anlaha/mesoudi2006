@@ -38,7 +38,7 @@ mesoudi2006/
 
 The report runs R files in `new_code/analysis/` and `new_code/power/` live, using their `## ---- label ----` markers.
 
-The scorer (`new_code/scoring/`) was frozen at the tag `llm-scorers-frozen` before any main data were collected. Later commits to `score.py` (before the `preregistration` tag) only changed what it reads and saves. Prompt and propositions are unchanged.
+The LLM scorer (`new_code/scoring/`) was frozen at the tag `llm-scorers-frozen` before any main data were collected. Later commits to `score.py` only changed what it reads and saves. Prompt and propositions are unchanged.
 
 The two submodules are separate repositories. To get them, clone with `git clone --recursive`, or run `git submodule update --init` in an existing clone. Mesoudi's is pinned to the version the report uses, and includes his propositional coding sheet and coding guide.
 
@@ -72,7 +72,7 @@ Raw data is stored in private database. `new_code/analysis/make_anon_data.R` wri
 The other files link recalls to hand codes and scores, each once for the pilot (`_pilot`) and once for the main study (`_study`):
 
 - `coding_key_*-anon.csv`: each hand-coded recall's code (R01, R02, ...) with its chain and generation. The pilot hand coded every recall, the main study a random third of the chains
-- `coded_*-anon.xlsx`: the hand codes. The `rubric` tab lists the propositions; each other tab is one coder, one row per recall, 1 if a proposition is present
+- `coded_*-anon.xlsx`: hand codes. The `rubric` tab lists the propositions; each other tab is one coder, one row per recall, 1 if a proposition is present
 - `llm_scores_*_claude-anon.csv` and `llm_scores_study_gemma-anon.csv`: each frozen scorer's score for each recall and paragraph (`material`), out of 14. Main-study recalls are named by chain and generation, e.g. C03G2
 
 Pre-registration (release `v1.0-prereg`): https://doi.org/10.5281/zenodo.24232620
@@ -87,7 +87,7 @@ Requires R (4.6) and Quarto. Must be connected to internet.
 
         quarto render "Replication Report Template.qmd"
 
-The LLM scores are already in `data/`. Rerunning the scorer itself (`new_code/scoring/score.py`) needs the private raw data and an Anthropic API key, so it isn't part of rerunning the analysis.
+The LLM scores are already in `data/`. Rerunning the scorer itself (`new_code/scoring/score.py`) needs the private raw data and an Anthropic API key, which you likely do not have if you are reading this!
 
 The report reads the anonymized data in `data/`, and loads Mesoudi's published data from his repository (https://github.com/amesoudi/mesoudi_whiten_dunbar_2006), pinned to one version. File paths are built with the `here` package, so the R files run from any folder inside the repo.
 
