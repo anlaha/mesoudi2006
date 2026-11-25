@@ -85,6 +85,11 @@ Requires R (4.6) and Quarto. Must be connected to internet.
 3. From `writeup/`, render the report:
 
         quarto render "Replication Report Template.qmd"
+        
+##Anushka's notes below from repo swap to check reproducibility
+##tiny note: Bria and I had to run renv::activate() prior to renv::restore to get Step 2 to run
+##the render stops because the renv might just be missing the package tidyverse?
+##left a screenshot of the exact error in a message over Slack!
 
 The LLM scores are already in `data/`. Rerunning the scorer itself (`new_code/scoring/score.py`) needs the private raw data and an Anthropic API key, which you likely do not have if you are reading this!
 
